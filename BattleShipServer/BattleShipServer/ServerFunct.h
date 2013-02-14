@@ -5,6 +5,9 @@
 #include <iostream>
 #include <winsock.h>
 
+#define SCK_VERSION1	0x0101
+#define SCK_VERSION2	0x0202
+
 
 //Using Statements
 //using std::cin;
