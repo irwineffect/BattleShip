@@ -6,10 +6,7 @@ int main (void)
 
 	int mPort = 3410;
 	char mIpAddr[16] = "127.0.0.1";
-	char buffer[32] = "";
-	int bytesreceived;
-	
-	int intbuffer;
+	char buffer[BUF_SIZE] = "";
 	
 	cout << "Starting Client" << endl;
 	
@@ -22,6 +19,7 @@ int main (void)
 	socket_info.sin_family = AF_INET;
 	socket_info.sin_port = htons(mPort);
 	socket_info.sin_addr.s_addr = inet_addr(mIpAddr);
+
 	
 	SOCKET mSocket;
 	
@@ -41,17 +39,18 @@ int main (void)
 	{
 		cout << "Socket connection successful" << endl;
 		
-		bytesreceived = recv(mSocket, (char*) &intbuffer, sizeof(int), 0);
-		
-		cout << bytesreceived << " bytes received" << endl;
-		cout << "MSG:" << endl;
-		cout << intbuffer << endl;	
+
+		cout << endl << endl;
+		while (mSocket)
+		{
+			cin >> buffer;
+			send(mSocket, buffer, BUF_SIZE, 0);
+			cout << "Sent: " << endl << buffer << endl;
+			recv(mSocket, buffer, BUF_SIZE, 0);
+			cout << "Received:" << endl << buffer << endl << endl;
+		}
 		
 	}
-		
-	
-	
-	
 	
 	cout << endl;
 	system("pause");

@@ -13,6 +13,6 @@
 using namespace std;
 
 #define SCK_VERSION2 0x0202
-#define BUFFER_SIZE 32
+#define BUF_SIZE 128
 
 #endif

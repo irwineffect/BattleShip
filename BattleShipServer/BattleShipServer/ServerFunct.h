@@ -7,6 +7,7 @@
 
 #define SCK_VERSION1	0x0101
 #define SCK_VERSION2	0x0202
+#define BUFSIZE	128
 
 
 //Using Statements
@@ -17,6 +18,7 @@ using namespace std;
 
 
 bool ConnectToHost( int PortNo, char* IPaddr);
+bool startListening(int PortNo, char* IPaddr, SOCKET *listener);
 void CloseConnection(void);
 
 
