@@ -40,20 +40,29 @@ int main (void)
 		cout << "Socket connection successful" << endl;
 		
 
+
+		int connected = 1;
 		cout << endl << endl;
-		while (mSocket)
+		while (1)
 		{
 			cin >> buffer;
 			send(mSocket, buffer, BUF_SIZE, 0);
 			cout << "Sent: " << endl << buffer << endl;
-			recv(mSocket, buffer, BUF_SIZE, 0);
+
+			buffer[0] = NULL;
+			connected = recv(mSocket, buffer, BUF_SIZE, 0);
 			cout << "Received:" << endl << buffer << endl << endl;
+
+			if (connected == -1)
+				break;
 		}
 		
 	}
 	
 	cout << endl;
-	system("pause");
+//	system("pause");
+
+	cout << "Disconnected" << endl;
 	
 	closesocket(mSocket);
 	WSACleanup();

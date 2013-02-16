@@ -91,3 +91,45 @@ void CloseConnection(void)
 	/*if (mySocket)
 		closesocket(mySocket);*/
 }
+
+//void acceptclient(SOCKET *mClients, int *numClients)
+//{
+//	SOCKET tempSocket;
+//
+//
+//	tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);
+//	if (tempSocket != INVALID_SOCKET)
+//	{
+//		mClients[numClients++] = tempSocket;
+//		cout << "client accepted" << endl;
+//	}
+//}
+
+
+
+void talk(SOCKET mSocket, int* numClients)
+{
+	char buffer[BUFSIZE] = "";
+	int connected = 1;
+
+	while( connected != -1 )
+	{
+		connected = recv(mSocket, buffer, BUFSIZE, 0);
+
+		if (buffer[0] != NULL)
+		{
+			cout << "received: " << endl << buffer << endl;
+			strcat(buffer, " -from server");
+			send(mSocket, buffer, BUFSIZE, 0);
+			cout << "echoed!" << endl << endl;
+		}
+
+		buffer[0] = '\0';
+	}
+
+	cout << "client disconnected" << endl << endl;
+	closesocket(mSocket);
+	--(*numClients);
+
+	return;
+}
