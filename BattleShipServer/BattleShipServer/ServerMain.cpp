@@ -3,15 +3,14 @@
 
 int main (void)
 {
-
 	int mPort = 3410;
 	char mIpAddr[16] = "127.0.0.1";
-	SOCKET mListenSocket, tempSocket;
+	SOCKET mListenSocket = NULL, tempSocket = NULL;
 	//SOCKET mClients[MAXCLIENTS];
 	thread mClients[MAXCLIENTS];
 	int numClients = 0;
 	int numThreads = 0;
-
+	
 	WSADATA wsadata;
 	SOCKADDR listen_socket_info;
 	int socket_size = sizeof(listen_socket_info);
@@ -27,21 +26,40 @@ int main (void)
 
 	if (startListening(mPort, mIpAddr, &mListenSocket))
 	{
-		do
-		{
-			tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);
-			mClients[numThreads].swap(new thread(talk, tempSocket, &numClients));
-			++numClients;
-			++numThreads;
-			cout << "Client Added!" << endl << numClients << " Clients Connected" << endl << endl;
+	
+		bool run = true;
+		u_long iMode = 1;
+		//ioctlsocket(mListenSocket, FIONBIO, &iMode);
+		thread exiter(exitPrompt, &run);
+		thread acceptThread(accepterLoop, mListenSocket, listen_socket_info, socket_size, &run);
 
-		}while (numClients != 0);
+		//do
+		//{
+		//	tempSocket = NULL;
+		//	tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);
 
-		for (int i=0; i < numThreads; ++i)
-		{
-			mClients[i].join();
-		}
+		//	if (tempSocket != INVALID_SOCKET)
+		//	{
+		//		thread temp(talk, tempSocket, &numClients);
+		//		mClients[numThreads].swap(temp);
+		//		++numClients;
+		//		++numThreads;
+		//		cout << "Client Added!" << endl << numClients << " Clients Connected" << endl << endl;
+		//	}
 
+		//	sleep_for(milliseconds(100));
+
+		//}while (run);
+
+		exiter.join();
+		acceptThread.join();
+
+		closesocket(mListenSocket);
+
+		//for (int i=0; i < numThreads; ++i)
+		//{
+		//	mClients[i].join();
+		//}
 	}
 
 	cout << "Done talking!" << endl;

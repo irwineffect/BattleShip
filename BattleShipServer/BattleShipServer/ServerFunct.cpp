@@ -1,48 +1,5 @@
 #include "ServerFunct.h"
 
-bool ConnectToHost( int PortNo, char* IPaddr)
-{
-	WSAData wsadata;
-
-	if (WSAStartup(MAKEWORD(2,0), &wsadata) != 0)
-	{
-		cout << "WSA Startup Failed" << endl;
-		return false;
-	}
-	else
-		cout << "WSA Startup Successful" << endl;
-
-	SOCKADDR_IN target;
-
-	target.sin_family = AF_INET;
-	target.sin_port = htons(PortNo);
-	target.sin_addr.s_addr = inet_addr (IPaddr);
-
-	SOCKET mySocket;
-
-	mySocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-	if (mySocket == INVALID_SOCKET)
-	{
-		cout << "Socket creation failed" << endl;
-		return false;
-	}
-	else
-		cout << "Socket creation successful" << endl;
-
-	if (connect(mySocket, (SOCKADDR*) &target, sizeof(target)) == SOCKET_ERROR)
-		{
-			cout << "Socket connection failed" << endl;
-			return false;
-		}
-	else
-		cout << "Socket connection sucessful" << endl;
-
-	return true;
-}
-
-
-
 bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 {
 
@@ -52,7 +9,7 @@ bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 	socket_info.sin_port = htons(PortNo);
 	socket_info.sin_addr.s_addr = inet_addr(IPaddr);
 
-	
+
 	*listener = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (*listener == INVALID_SOCKET)
 	{
@@ -61,11 +18,11 @@ bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 	}
 	else
 		cout << "Socket creation successful" << endl;
-	
+
 	int bind_status;
-	
+
 	bind_status = bind(*listener, (LPSOCKADDR) &socket_info, sizeof(socket_info));
-	
+
 	if (bind_status == SOCKET_ERROR)
 	{
 		cout << "Socket binding failed" << endl;
@@ -79,32 +36,8 @@ bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 		cout << "listening..." << endl;
 	}
 
-
 	return true;
 }
-
-
-
-
-void CloseConnection(void)
-{
-	/*if (mySocket)
-		closesocket(mySocket);*/
-}
-
-//void acceptclient(SOCKET *mClients, int *numClients)
-//{
-//	SOCKET tempSocket;
-//
-//
-//	tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);
-//	if (tempSocket != INVALID_SOCKET)
-//	{
-//		mClients[numClients++] = tempSocket;
-//		cout << "client accepted" << endl;
-//	}
-//}
-
 
 
 void talk(SOCKET mSocket, int* numClients)
@@ -130,6 +63,60 @@ void talk(SOCKET mSocket, int* numClients)
 	cout << "client disconnected" << endl << endl;
 	closesocket(mSocket);
 	--(*numClients);
+
+	return;
+}
+
+void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool *run)
+{
+	SOCKET tempSocket;
+	thread mClients[MAXCLIENTS];
+	int numClients = 0;
+	int numThreads = 0;
+
+	u_long iMode = 1;
+	ioctlsocket(mListenSocket, FIONBIO, &iMode);
+
+	while((*run))
+	{
+		tempSocket = NULL;
+		tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);
+
+		iMode = 0;
+		ioctlsocket(tempSocket, FIONBIO, &iMode);
+
+		if (tempSocket != INVALID_SOCKET)
+		{
+			thread temp(talk, tempSocket, &numClients);
+			mClients[numThreads].swap(temp);
+			++numClients;
+			++numThreads;
+			cout << "Client Added!" << endl << numClients << " Clients Connected" << endl << endl;
+		}
+	}
+
+
+
+	for (int i=0; i < numThreads; ++i)
+	{
+		mClients[i].join();
+	}
+
+}
+
+void exitPrompt(bool* run)
+{
+	string buffer;
+	do
+	{
+		cout << "Type \"exit\" to stop server" << endl;
+
+		cin >> buffer;
+
+		if (buffer == "exit")
+			*run = false;
+
+	}while ((*run));
 
 	return;
 }
