@@ -3,69 +3,41 @@
 
 int main (void)
 {
-	int mPort = 3410;
-	char mIpAddr[16] = "127.0.0.1";
-	SOCKET mListenSocket = NULL, tempSocket = NULL;
-	//SOCKET mClients[MAXCLIENTS];
-	thread mClients[MAXCLIENTS];
-	int numClients = 0;
-	int numThreads = 0;
-	
-	WSADATA wsadata;
-	SOCKADDR listen_socket_info;
-	int socket_size = sizeof(listen_socket_info);
-	char buffer[BUFSIZE] = "";
+	int mPort = 3410; //listening port
+	char mIpAddr[16] = "127.0.0.1"; //self IP iddress
+	SOCKET mListenSocket = NULL, tempSocket = NULL; //socket initialization
+	thread mClients[MAXCLIENTS]; //thread initialization
+	int numClients = 0;	//current number of connected clients
+	int numThreads = 0; //current number of running threads
+	WSADATA wsadata; //variable used for initializing the socket software stuff
+	SOCKADDR listen_socket_info;	//variable used for inititalizing the listening socket
+	int socket_size = sizeof(listen_socket_info);	//size of the listening socket, used for initialization
+	char buffer[BUFSIZE] = "";	//communication buffer
 
 
 	cout << "Starting Server" << endl;
 
-	if (WSAStartup(SCK_VERSION1, &wsadata))
+	if (WSAStartup(SCK_VERSION1, &wsadata))		//initialize socket stuff
 		cout << "WSAStartup failed" << endl;
-	else
-		cout << "WSAStartup successful" << endl;
+	//else
+		//cout << "WSAStartup successful" << endl;
 
-	if (startListening(mPort, mIpAddr, &mListenSocket))
-	{
-	
+	if (startListening(mPort, mIpAddr, &mListenSocket))	//startListening() returns successful if all initialization things went well
+	{	
 		bool run = true;
-		u_long iMode = 1;
-		//ioctlsocket(mListenSocket, FIONBIO, &iMode);
-		thread exiter(exitPrompt, &run);
-		thread acceptThread(accepterLoop, mListenSocket, listen_socket_info, socket_size, &run);
+		thread exiter(exitPrompt, &run);	//this thread waits for the "exit" command to be entered on the terminal. 
+		thread acceptThread(accepterLoop, mListenSocket, listen_socket_info, socket_size, &run); //this thread accepts new clients (which then starts a talking thread for the new client)
 
-		//do
-		//{
-		//	tempSocket = NULL;
-		//	tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);
+		exiter.join(); //wait for the exit command to be entered on the terminal
+		acceptThread.join(); //wait for all connections and other threads to end
 
-		//	if (tempSocket != INVALID_SOCKET)
-		//	{
-		//		thread temp(talk, tempSocket, &numClients);
-		//		mClients[numThreads].swap(temp);
-		//		++numClients;
-		//		++numThreads;
-		//		cout << "Client Added!" << endl << numClients << " Clients Connected" << endl << endl;
-		//	}
-
-		//	sleep_for(milliseconds(100));
-
-		//}while (run);
-
-		exiter.join();
-		acceptThread.join();
-
-		closesocket(mListenSocket);
-
-		//for (int i=0; i < numThreads; ++i)
-		//{
-		//	mClients[i].join();
-		//}
+		closesocket(mListenSocket); //close the listening socket
 	}
 
-	cout << "Done talking!" << endl;
+	cout << "Done!" << endl;
 	//system("pause");
 
-	WSACleanup();
+	WSACleanup();	//not sure exactly what this does, but we're always supposed to call this at the end (I think it closes sockets, etc) 
 
 	return 0;
 }

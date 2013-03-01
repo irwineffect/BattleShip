@@ -8,6 +8,7 @@
 #include <thread>
 #include <string>
 
+//System constants
 #define SCK_VERSION1	0x0101
 #define SCK_VERSION2	0x0202
 #define BUFSIZE	128
@@ -24,13 +25,11 @@ using std::chrono::milliseconds;
 using std::string;
 //using namespace std;
 
-
-bool ConnectToHost( int PortNo, char* IPaddr);
+//Function Headers
 bool startListening(int PortNo, char* IPaddr, SOCKET *listener);
-void talk(SOCKET mSocket, int* numClients);
-void CloseConnection(void);
 void exitPrompt(bool* run);
 void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool *run);
+void talk(SOCKET mSocket, int* numClients);
 
 
 #endif
