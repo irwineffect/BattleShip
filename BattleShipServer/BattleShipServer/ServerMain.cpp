@@ -12,7 +12,13 @@ int main (void)
 	WSADATA wsadata; //variable used for initializing the socket software stuff
 	SOCKADDR listen_socket_info;	//variable used for inititalizing the listening socket
 	int socket_size = sizeof(listen_socket_info);	//size of the listening socket, used for initialization
-	char buffer[BUFSIZE] = "";	//communication buffer
+	//char buffer[BUFSIZE] = "";	//communication buffer
+	//bool canWrite = true;
+
+	int numbers[MAXCLIENTS] = {1,2,0,3,4,0,5};
+	int size = 5;
+	cleanArray(numbers, &size);
+
 
 
 	cout << "Starting Server" << endl;

@@ -31,10 +31,10 @@ bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 		return false;
 	}
 	//else
-		//cout << "Socket creation successful" << endl;
-	
+	//cout << "Socket creation successful" << endl;
+
 	bind_status = bind(*listener, (LPSOCKADDR) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
-	
+
 	if (bind_status == SOCKET_ERROR)
 	{
 		cout << "Socket binding failed" << endl;
@@ -107,6 +107,9 @@ void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_
 	thread mClients[MAXCLIENTS];
 	int numClients = 0;
 	int numThreads = 0;
+	char outbuffer[BUFSIZE] = "";	//communication buffer
+	bool canWrite = true;
+
 
 	u_long iMode = 1;
 	ioctlsocket(mListenSocket, FIONBIO, &iMode);	//sets the listening socket to be nonblocking, so we can poll it for new connections
@@ -115,19 +118,18 @@ void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_
 	{
 		tempSocket = NULL;
 		/*	accept() is a normally a blocking function, meaning that program flow would halt here
-			but because of the ioctlsocket() call up above, it makes the function non-blocking, so
-			we need to use a polling method
+		but because of the ioctlsocket() call up above, it makes the function non-blocking, so
+		we need to use a polling method
 		*/
 		tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);	
 
-		iMode = 0;
-		//we want the socket that talks to be blocking
-		ioctlsocket(tempSocket, FIONBIO, &iMode);	//sets the communication socket to be blocking, so that it doesn't act until it recieves anything
+		iMode = 0;	//we want the socket that talks to be blocking 
+		ioctlsocket(tempSocket, FIONBIO, &iMode);	//sets the communication socket to be blocking
 
 		if (tempSocket != INVALID_SOCKET)	//accept() will return an invalid socket if there is no pending connections
 		{
 			clientSockets[numClients] = tempSocket;	//add to array of clients sockets
-			thread temp(talk, tempSocket, &numClients);	//start a thread for talking on the sockets
+			thread temp(receiver, tempSocket, &numClients, outbuffer, &canWrite);	//start a thread for listening to the sockets
 			mClients[numThreads].swap(temp);	//add that thread to the array of threads
 			++numClients;
 			++numThreads;
@@ -138,7 +140,7 @@ void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_
 	}
 
 	cout << "trying to exit...waiting for all clients to disconnect..." << endl;
-	
+
 	for (int i=0; i < MAXCLIENTS; ++i)
 	{
 		closesocket(clientSockets[i]);	//closes all the sockets, which will in turn allow all communication threads to die
@@ -153,7 +155,7 @@ void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_
 
 
 /**********************************************
-*	talk()
+*	receiver()
 *
 *	Description:
 *		Communicates on the socket. Currently just echos back whatever is sent to the server
@@ -166,7 +168,7 @@ void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_
 *
 *
 **********************************************/
-void talk(SOCKET mSocket, int* numClients)
+void receiver(SOCKET mSocket, int* numClients, char outbuffer[BUFSIZE], bool* canWrite)
 {
 	char buffer[BUFSIZE] = "";	//data buffer
 	int connected = 1;	
@@ -192,6 +194,176 @@ void talk(SOCKET mSocket, int* numClients)
 	closesocket(mSocket);	//close the socket
 	--(*numClients);
 	cout << (*numClients) << " clients connected" << endl;
+
+	return;
+}
+
+/**********************************************
+*	receiver()
+*
+*	Description:
+*		Communicates on the socket. Currently just echos back whatever is sent to the server
+*		
+*
+*	input parameters:
+*
+*	returns:
+*
+*
+*
+**********************************************/
+void sender(SOCKET mSocket, bool *run, char outbuffer[BUFSIZE], bool* canWrite)
+{
+
+	while((*run))
+	{
+		if (outbuffer[0] != '\0')
+		{
+			send(mSocket, outbuffer, BUFSIZE, 0);
+
+		}
+
+	}
+
+
+
+}
+
+
+/**********************************************
+*	cleanArray()
+*
+*	Description:
+*		Removes invalid entries from the socket list
+*		
+*
+*	input parameters:
+*
+*	returns:
+*
+*
+*
+**********************************************/
+void cleanArray(SOCKET Clients[MAXCLIENTS], int* numClients)
+{
+	SOCKET temp = NULL;
+
+	for (int i=0; i< (*numClients); ++i)
+	{
+		if (Clients[i] == NULL)
+		{
+			if (i <= (*numClients-2))
+			{
+				Clients[i] = Clients[i+1];
+				Clients[i+1] = NULL;
+			}
+		}
+	}
+}
+
+
+void cleanArray(int Clients[MAXCLIENTS], int* numClients)
+{
+	int temp = NULL;
+	bool clean = false;
+
+	int k=0;
+
+	for (k=0; Clients[k] !=NULL; ++k);
+	if (k==*numClients)
+		clean = true;
+
+	while(!clean)
+	{
+
+		for (int i=0; i< MAXCLIENTS; ++i)
+		{
+			if (Clients[i] == NULL)
+			{
+				if (i <= (MAXCLIENTS-2))
+				{
+					Clients[i] = Clients[i+1];
+					Clients[i+1] = NULL;
+				}
+			}
+
+			for(int j=0; j<MAXCLIENTS; ++j)
+			{
+				cout << j << ": " << Clients[j] << endl;
+			}
+			cout << endl;
+
+			for (k=0; Clients[k] !=NULL; ++k);
+			if (k==*numClients)
+			{
+				clean = true;
+				break;
+			}
+		}
+	}
+}
+
+
+//MsgBuffer Class functions
+MsgBuffer::MsgBuffer(void)
+{
+	this->root = NULL;
+
+	return;
+}
+
+MsgBuffer::~MsgBuffer(void)
+{
+	deconstructor(this->root);
+}
+
+void MsgBuffer::deconstructor(Msg* node)
+{
+	if (node != NULL)
+	{
+		deconstructor(node->next);
+		delete node;
+	}
+}
+
+void MsgBuffer::queue(char input[BUFSIZE])
+{
+	Msg* walker  = this->root;
+
+	//walks through the queue to the end
+	if (walker != NULL)
+		while(walker->next != NULL)
+			walker = walker->next;
+
+	walker->next = new Msg;	//creates a new message and attaches it to the end
+
+	walker = walker->next;
+
+	walker->next = NULL;	//null the pointer for the last message
+
+	//copy the input message to the new Msg element
+	for (int i=0; i < BUFSIZE; ++i)
+		walker->message[i] = input[i];
+
+	return;
+}
+
+void MsgBuffer::dequeue(char output[BUFSIZE])
+{
+	Msg* temp = this->root;	
+
+	if (temp != NULL)	//check to make sure the queue isn't empty
+	{
+		root = root->next;	//move the root node
+
+		//copy the Msg to the output array
+		for (int i=0; i < BUFSIZE; ++i)
+			output[i] = temp->message[i];
+
+		delete temp;	//delete the Msg node
+	}
+	else
+		cout << "Error: queue is empty!" << endl;
 
 	return;
 }

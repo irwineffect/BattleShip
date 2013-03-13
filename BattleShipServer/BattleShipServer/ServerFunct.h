@@ -29,7 +29,39 @@ using std::string;
 bool startListening(int PortNo, char* IPaddr, SOCKET *listener);
 void exitPrompt(bool* run);
 void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool *run);
-void talk(SOCKET mSocket, int* numClients);
+void receiver(SOCKET mSocket, int* numClients, char outbuffer[BUFSIZE], bool* canWrite);
+void sender(SOCKET mSocket, bool *run, char outbuffer[BUFSIZE], bool*canWrite);
+//void cleanup(
 
+//array management
+void cleanArray(SOCKET Clients[MAXCLIENTS], int* numClients);
+void cleanArray(int Clients[MAXCLIENTS], int* numClients);
+
+
+
+//Msgbuffer Class
+
+typedef struct msg	//node for the buffer
+{
+	char message[BUFSIZE];
+	struct msg* next;
+
+} Msg;
+
+class MsgBuffer	//the class
+{
+public:
+
+		MsgBuffer::MsgBuffer(void);	//constructor
+		MsgBuffer::~MsgBuffer(void); //destructor
+	void MsgBuffer::queue(char input[BUFSIZE]);
+	void MsgBuffer::dequeue(char output[BUFSIZE]);
+	
+
+private:
+	void MsgBuffer::deconstructor(Msg* node);	//destructor helper function
+	Msg* root;
+
+};
 
 #endif
