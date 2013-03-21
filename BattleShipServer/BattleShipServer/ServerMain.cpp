@@ -12,14 +12,6 @@ int main (void)
 	WSADATA wsadata; //variable used for initializing the socket software stuff
 	SOCKADDR listen_socket_info;	//variable used for inititalizing the listening socket
 	int socket_size = sizeof(listen_socket_info);	//size of the listening socket, used for initialization
-	//char buffer[BUFSIZE] = "";	//communication buffer
-	//bool canWrite = true;
-
-	int numbers[MAXCLIENTS] = {1,2,0,3,4,0,5};
-	int size = 5;
-	cleanArray(numbers, &size);
-
-
 
 	cout << "Starting Server" << endl;
 
@@ -28,11 +20,11 @@ int main (void)
 	//else
 		//cout << "WSAStartup successful" << endl;
 
-	if (startListening(mPort, mIpAddr, &mListenSocket))	//startListening() returns successful if all initialization things went well
+	if (startListening(mPort, mIpAddr, mListenSocket))	//startListening() returns successful if all initialization things went well
 	{	
 		bool run = true;
-		thread exiter(exitPrompt, &run);	//this thread waits for the "exit" command to be entered on the terminal. 
-		thread acceptThread(accepterLoop, mListenSocket, listen_socket_info, socket_size, &run); //this thread accepts new clients (which then starts a talking thread for the new client)
+		thread exiter(exitPrompt, std::ref(run));	//this thread waits for the "exit" command to be entered on the terminal. 
+		thread acceptThread(accepterLoop, mListenSocket, listen_socket_info, socket_size, std::ref(run)); //this thread accepts new clients (which then starts a talking thread for the new client)
 
 		exiter.join(); //wait for the exit command to be entered on the terminal
 		acceptThread.join(); //wait for all connections and other threads to end

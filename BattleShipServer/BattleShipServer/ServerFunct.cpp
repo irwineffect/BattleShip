@@ -13,7 +13,7 @@
 *
 *
 **********************************************/
-bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
+bool startListening(int PortNo, char* IPaddr, SOCKET &listener)
 {
 
 	SOCKADDR_IN socket_info;
@@ -24,8 +24,8 @@ bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 	//socket_info.sin_addr.s_addr = inet_addr(IPaddr); //only accept connections from specified IP address
 	socket_info.sin_addr.s_addr = htonl (INADDR_ANY);  //accept connections from any IP address
 
-	*listener = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);	//initial the socket for ipv4, and a TCP streaming socket
-	if (*listener == INVALID_SOCKET)
+	listener = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);	//initial the socket for ipv4, and a TCP streaming socket
+	if (listener == INVALID_SOCKET)
 	{
 		cout << "Socket creation failed" << endl;
 		return false;
@@ -33,7 +33,7 @@ bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 	//else
 	//cout << "Socket creation successful" << endl;
 
-	bind_status = bind(*listener, (LPSOCKADDR) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
+	bind_status = bind(listener, (LPSOCKADDR) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
 
 	if (bind_status == SOCKET_ERROR)
 	{
@@ -44,7 +44,7 @@ bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 	{
 		//cout << "Socket binding successful" << endl;
 		cout << "Starting to listen...";
-		listen(*listener, SOMAXCONN);	//causes the socket to start listening. SOMAXCONN is a system constant specifying the max number of connections possible at once
+		listen(listener, SOMAXCONN);	//causes the socket to start listening. SOMAXCONN is a system constant specifying the max number of connections possible at once
 		cout << "listening..." << endl;
 	}
 
@@ -66,7 +66,7 @@ bool startListening(int PortNo, char* IPaddr, SOCKET *listener)
 *
 *
 **********************************************/
-void exitPrompt(bool* run)
+void exitPrompt(bool& run)
 {
 	string buffer;
 	do
@@ -76,9 +76,9 @@ void exitPrompt(bool* run)
 		cin >> buffer;
 
 		if (buffer == "exit")
-			*run = false;
+			run = false;
 
-	}while ((*run));	//the run variable is used by the other threads to know when to quit
+	}while ((run));	//the run variable is used by the other threads to know when to quit
 
 	return;
 }
@@ -100,7 +100,7 @@ void exitPrompt(bool* run)
 *
 *
 **********************************************/
-void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool *run)
+void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool& run)
 {
 	SOCKET tempSocket;
 	SOCKET clientSockets[MAXCLIENTS];
@@ -110,11 +110,10 @@ void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_
 	char outbuffer[BUFSIZE] = "";	//communication buffer
 	bool canWrite = true;
 
-
 	u_long iMode = 1;
 	ioctlsocket(mListenSocket, FIONBIO, &iMode);	//sets the listening socket to be nonblocking, so we can poll it for new connections
 
-	while((*run))
+ 	while(run)
 	{
 		tempSocket = NULL;
 		/*	accept() is a normally a blocking function, meaning that program flow would halt here
@@ -136,7 +135,7 @@ void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_
 			cout << "client added!" << endl << numClients << " clients connected" << endl << endl;
 		}
 
-		//sleep_for(milliseconds(100));
+		sleep_for(milliseconds(IDLE_PERIOD));
 	}
 
 	cout << "trying to exit...waiting for all clients to disconnect..." << endl;
@@ -198,113 +197,121 @@ void receiver(SOCKET mSocket, int* numClients, char outbuffer[BUFSIZE], bool* ca
 	return;
 }
 
-/**********************************************
-*	receiver()
+///**********************************************
+//*	sender()
+//*
+//*	Description:
+//*		Communicates on the socket. Currently just echos back whatever is sent to the server
+//*		
+//*
+//*	input parameters:
+//*
+//*	returns:
+//*
+//*
+//*
+//**********************************************/
+//void sender(SOCKET mSocket, bool &run, char outbuffer[BUFSIZE], bool &canWrite)
+//{
+//
+//	while((run))
+//	{
+//		if (outbuffer[0] != '\0')
+//		{
+//			send(mSocket, outbuffer, BUFSIZE, 0);
+//
+//		}	 
+//	}
+//}
+
+
+///**********************************************
+//*	cleanArray()
+//*
+//*	Description:
+//*		Removes invalid entries from the socket list
+//*		
+//*
+//*	input parameters:
+//*
+//*	returns:
+//*
+//*
+//*
+//**********************************************/
+//void cleanArray(SOCKET Clients[MAXCLIENTS], int* numClients)
+//{
+//	SOCKET temp = NULL;
+//
+//	for (int i=0; i< (*numClients); ++i)
+//	{
+//		if (Clients[i] == NULL)
+//		{
+//			if (i <= (*numClients-2))
+//			{
+//				Clients[i] = Clients[i+1];
+//				Clients[i+1] = NULL;
+//			}
+//		}
+//	}
+//}
+//
+//
+//void cleanArray(int Clients[MAXCLIENTS], int* numClients)
+//{
+//	int temp = NULL;
+//	bool clean = false;
+//
+//	int k=0;
+//
+//	for (k=0; Clients[k] !=NULL; ++k);
+//	if (k==*numClients)
+//		clean = true;
+//
+//	while(!clean)
+//	{
+//
+//		for (int i=0; i< MAXCLIENTS; ++i)
+//		{
+//			if (Clients[i] == NULL)
+//			{
+//				if (i <= (MAXCLIENTS-2))
+//				{
+//					Clients[i] = Clients[i+1];
+//					Clients[i+1] = NULL;
+//				}
+//			}
+//
+//			for(int j=0; j<MAXCLIENTS; ++j)
+//			{
+//				cout << j << ": " << Clients[j] << endl;
+//			}
+//			cout << endl;
+//
+//			for (k=0; Clients[k] !=NULL; ++k);
+//			if (k==*numClients)
+//			{
+//				clean = true;
+//				break;
+//			}
+//		}
+//	}
+//}
+
+
+/***************************************************************************************************************
+****************************************************************************************************************
+*	MsgBuffer Class
 *
-*	Description:
-*		Communicates on the socket. Currently just echos back whatever is sent to the server
-*		
-*
-*	input parameters:
-*
-*	returns:
 *
 *
 *
-**********************************************/
-void sender(SOCKET mSocket, bool *run, char outbuffer[BUFSIZE], bool* canWrite)
-{
-
-	while((*run))
-	{
-		if (outbuffer[0] != '\0')
-		{
-			send(mSocket, outbuffer, BUFSIZE, 0);
-
-		}
-
-	}
-
-
-
-}
-
-
-/**********************************************
-*	cleanArray()
-*
-*	Description:
-*		Removes invalid entries from the socket list
-*		
-*
-*	input parameters:
-*
-*	returns:
 *
 *
 *
-**********************************************/
-void cleanArray(SOCKET Clients[MAXCLIENTS], int* numClients)
-{
-	SOCKET temp = NULL;
-
-	for (int i=0; i< (*numClients); ++i)
-	{
-		if (Clients[i] == NULL)
-		{
-			if (i <= (*numClients-2))
-			{
-				Clients[i] = Clients[i+1];
-				Clients[i+1] = NULL;
-			}
-		}
-	}
-}
-
-
-void cleanArray(int Clients[MAXCLIENTS], int* numClients)
-{
-	int temp = NULL;
-	bool clean = false;
-
-	int k=0;
-
-	for (k=0; Clients[k] !=NULL; ++k);
-	if (k==*numClients)
-		clean = true;
-
-	while(!clean)
-	{
-
-		for (int i=0; i< MAXCLIENTS; ++i)
-		{
-			if (Clients[i] == NULL)
-			{
-				if (i <= (MAXCLIENTS-2))
-				{
-					Clients[i] = Clients[i+1];
-					Clients[i+1] = NULL;
-				}
-			}
-
-			for(int j=0; j<MAXCLIENTS; ++j)
-			{
-				cout << j << ": " << Clients[j] << endl;
-			}
-			cout << endl;
-
-			for (k=0; Clients[k] !=NULL; ++k);
-			if (k==*numClients)
-			{
-				clean = true;
-				break;
-			}
-		}
-	}
-}
-
-
-//MsgBuffer Class functions
+*
+*
+***************************************************************************************************************/
 MsgBuffer::MsgBuffer(void)
 {
 	this->root = NULL;
@@ -366,4 +373,102 @@ void MsgBuffer::dequeue(char output[BUFSIZE])
 		cout << "Error: queue is empty!" << endl;
 
 	return;
+}
+
+
+
+/***************************************************************************************************************
+****************************************************************************************************************
+*	ClientList Class
+*
+*
+*
+*
+*
+*
+*
+*
+*
+***************************************************************************************************************/
+ClientList::ClientList(void)
+{
+	this->root = NULL;
+
+	return;
+}
+
+ClientList::~ClientList(void)
+{
+	deconstructor(this->root);
+}
+
+void ClientList::deconstructor(SocketNode* node)
+{
+	if (node != NULL)
+	{
+		deconstructor(node->next);
+		delete node;
+	}
+}
+
+void ClientList::add(SOCKET newSocket)
+{
+	SocketNode* walker  = this->root;
+
+	//walks through the queue to the end
+	if (walker != NULL)
+		while(walker->next != NULL)
+			walker = walker->next;
+
+	walker->next = new SocketNode;	//creates a new SocketNode and attaches it to the end
+
+	walker = walker->next;
+
+	walker->next = NULL;	//null the pointer for the last node
+
+	//add new socket and thread and stuff
+
+	walker->mSocket = newSocket;
+	thread temp(&ClientList::receiver, this, walker->mSocket);	//start a thread for listening to the sockets
+	walker->mThread.swap(temp);	//attached thread handle to the node
+
+	return;
+}
+
+void ClientList::receiver(SOCKET mSocket)
+{
+	char buffer[BUFSIZE] = "";	//data buffer
+	int connected = 1;	
+
+	while( connected != -1 )
+	{
+		//recv() is a blocking function, meaning program flow will halt here until
+		//somebody sends something
+		connected = recv(mSocket, buffer, BUFSIZE, 0);	//recv() will return a -1 if the socket is disconnected
+
+		if (buffer[0] != NULL)
+		{
+			cout << "received: " << endl << buffer << endl;
+			strcat(buffer, " -from server");
+			this->mBuffer.queue(buffer);
+			//send(mSocket, buffer, BUFSIZE, 0);	//send the data back that was recieved
+			//cout << "echoed!" << endl << endl;
+		}
+
+		buffer[0] = '\0';
+	}
+
+	cout << "client disconnected" << endl << endl;
+	closesocket(mSocket);	//close the socket
+	--numClients;
+	cout << numClients << " clients connected" << endl;
+
+	return;
+}
+
+
+void ClientList::sender(void)
+{
+
+
 }

@@ -5,7 +5,7 @@ int main (void)
 {
 
 	int mPort = 3410;	//port to connect on
-	char mIpAddr[16]; // = "127.0.0.1";	//ip address to connect to (defaults
+	char mIpAddr[16] = "127.0.0.1";	//ip address to connect to (defaults
 	char buffer[BUF_SIZE] = "";	//data buffer
 	
 	cout << "Starting Client" << endl;
@@ -14,11 +14,10 @@ int main (void)
 	
 	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
 
-	cout << "enter host ip -> ";	//enter ip address to connect to
-	cin >> mIpAddr;
+	//cout << "enter host ip -> ";	//enter ip address to connect to
+	//cin >> mIpAddr;
 	
 	SOCKADDR_IN socket_info; //variable holding information for setting up the socket
-	
 	socket_info.sin_family = AF_INET;	//use ipv4
 	socket_info.sin_port = htons(mPort);	//use selected port
 	socket_info.sin_addr.s_addr = inet_addr(mIpAddr);	//use selected address
