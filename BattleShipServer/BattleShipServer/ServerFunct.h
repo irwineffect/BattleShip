@@ -86,11 +86,13 @@ public:
 
 private:
 	void ClientList::deconstructor(SocketNode* node);	//destructor helper function
+	void ClientList::accepter(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool& run);
 	void ClientList::receiver(SOCKET mSocket);
 	void ClientList::sender(void);
 	SocketNode* root;
 	MsgBuffer mBuffer;
 	int numClients;
+	bool run;
 
 };
 

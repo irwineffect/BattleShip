@@ -370,7 +370,10 @@ void MsgBuffer::dequeue(char output[BUFSIZE])
 		delete temp;	//delete the Msg node
 	}
 	else
-		cout << "Error: queue is empty!" << endl;
+	{
+		output[0] = '\0';
+		//cout << "Error: queue is empty!" << endl;
+	}
 
 	return;
 }
@@ -469,6 +472,26 @@ void ClientList::receiver(SOCKET mSocket)
 
 void ClientList::sender(void)
 {
+	char message[BUFSIZE] = {'\0'};
+	SocketNode* walker;
+
+	while(run)
+	{
+		walker = this->root;	//start at the beginning of the list of sockets
+		this->mBuffer.dequeue(message); //pull a message out of the queue
+		if (message[0] != '\0')	//check to see if there are any messages in the queue
+		{
+			while(walker != NULL)	//goes through the queue, sends the message to everyone.
+			{
+				send(walker->mSocket, message, BUFSIZE, 0);
+				walker = walker->next;
+			}
+		}
+		else
+			sleep_for(milliseconds(IDLE_PERIOD)); //if there are no messages in the queue, chill for a bit
+
+	}
+
 
 
 }
