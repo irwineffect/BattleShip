@@ -4,8 +4,8 @@
 int main (void)
 {
 
-	int mPort = 3410;	//port to connect on
-	char mIpAddr[16] = "192.168.1.5";	//ip address to connect to (defaults
+	int mPort = 80;	//port to connect on
+	char mIpAddr[32] = "76.178.149.238";	//ip address to connect to (defaults
 	char buffer[BUF_SIZE] = "";	//data buffer
 	
 	cout << "Starting Client" << endl;
@@ -47,7 +47,7 @@ int main (void)
 		cout << endl << endl;
 		while (1)
 		{
-			cin >> buffer;	//read data from the user
+			cin.getline(buffer, BUF_SIZE, '\n');	//read data from the user
 			connected =	send(mSocket, buffer, BUF_SIZE, 0);	//send the data to the server
 			cout << "Sent: " << endl << buffer << endl;
 
@@ -61,7 +61,7 @@ int main (void)
 	}
 	
 	cout << endl;
-//	system("pause");
+	system("pause");
 
 	cout << "Disconnected" << endl;
 

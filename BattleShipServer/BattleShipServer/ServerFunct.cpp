@@ -197,7 +197,7 @@ void BattleServer::Deconstructor(SocketNode* node)
 
 void BattleServer::Start(void)
 {
-	int mPort = 3410; //listening port
+	int mPort = 80; //listening port
 	char mIpAddr[16] = "127.0.0.1"; //self IP iddress
 	SOCKET mListenSocket = NULL, tempSocket = NULL; //socket initialization
 	WSADATA wsadata; //variable used for initializing the socket software stuff

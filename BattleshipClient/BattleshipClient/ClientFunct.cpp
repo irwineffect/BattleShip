@@ -16,7 +16,7 @@ void Receiver(SOCKET mSocket)
 
 		if (buffer[0] != NULL)
 		{
-			cout << "received: " << endl << buffer << endl;
+			cout << "received: " << endl << buffer << endl << endl;
 		}
 
 		buffer[0] = '\0';
