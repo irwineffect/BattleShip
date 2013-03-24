@@ -13,43 +13,6 @@
 *
 *
 **********************************************/
-bool startListening(int PortNo, char* IPaddr, SOCKET &listener)
-{
-
-	SOCKADDR_IN socket_info;
-	int bind_status;
-
-	socket_info.sin_family = AF_INET;	//type of connection (use this)
-	socket_info.sin_port = htons(PortNo);	//the port number. (htons() is a function to convert it to the proper format)
-	//socket_info.sin_addr.s_addr = inet_addr(IPaddr); //only accept connections from specified IP address
-	socket_info.sin_addr.s_addr = htonl (INADDR_ANY);  //accept connections from any IP address
-
-	listener = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);	//initial the socket for ipv4, and a TCP streaming socket
-	if (listener == INVALID_SOCKET)
-	{
-		cout << "Socket creation failed" << endl;
-		return false;
-	}
-	//else
-	//cout << "Socket creation successful" << endl;
-
-	bind_status = bind(listener, (LPSOCKADDR) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
-
-	if (bind_status == SOCKET_ERROR)
-	{
-		cout << "Socket binding failed" << endl;
-		return false;
-	}
-	else
-	{
-		//cout << "Socket binding successful" << endl;
-		cout << "Starting to listen...";
-		listen(listener, SOMAXCONN);	//causes the socket to start listening. SOMAXCONN is a system constant specifying the max number of connections possible at once
-		cout << "listening..." << endl;
-	}
-
-	return true;
-}
 
 
 /**********************************************
@@ -66,22 +29,6 @@ bool startListening(int PortNo, char* IPaddr, SOCKET &listener)
 *
 *
 **********************************************/
-void exitPrompt(bool& run)
-{
-	string buffer;
-	do
-	{
-		cout << "Type \"exit\" to stop server" << endl;
-
-		cin >> buffer;
-
-		if (buffer == "exit")
-			run = false;
-
-	}while ((run));	//the run variable is used by the other threads to know when to quit
-
-	return;
-}
 
 
 
@@ -100,57 +47,6 @@ void exitPrompt(bool& run)
 *
 *
 **********************************************/
-void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool& run)
-{
-	SOCKET tempSocket;
-	SOCKET clientSockets[MAXCLIENTS];
-	thread mClients[MAXCLIENTS];
-	int numClients = 0;
-	int numThreads = 0;
-	char outbuffer[BUFSIZE] = "";	//communication buffer
-	bool canWrite = true;
-
-	u_long iMode = 1;
-	ioctlsocket(mListenSocket, FIONBIO, &iMode);	//sets the listening socket to be nonblocking, so we can poll it for new connections
-
- 	while(run)
-	{
-		tempSocket = NULL;
-		/*	accept() is a normally a blocking function, meaning that program flow would halt here
-		but because of the ioctlsocket() call up above, it makes the function non-blocking, so
-		we need to use a polling method
-		*/
-		tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);	
-
-		iMode = 0;	//we want the socket that talks to be blocking 
-		ioctlsocket(tempSocket, FIONBIO, &iMode);	//sets the communication socket to be blocking
-
-		if (tempSocket != INVALID_SOCKET)	//accept() will return an invalid socket if there is no pending connections
-		{
-			clientSockets[numClients] = tempSocket;	//add to array of clients sockets
-			thread temp(receiver, tempSocket, &numClients, outbuffer, &canWrite);	//start a thread for listening to the sockets
-			mClients[numThreads].swap(temp);	//add that thread to the array of threads
-			++numClients;
-			++numThreads;
-			cout << "client added!" << endl << numClients << " clients connected" << endl << endl;
-		}
-
-		sleep_for(milliseconds(IDLE_PERIOD));
-	}
-
-	cout << "trying to exit...waiting for all clients to disconnect..." << endl;
-
-	for (int i=0; i < MAXCLIENTS; ++i)
-	{
-		closesocket(clientSockets[i]);	//closes all the sockets, which will in turn allow all communication threads to die
-	}
-
-	for (int i=0; i < numThreads; ++i)
-	{
-		mClients[i].join();	//ensures all the communication threads have been killed
-	}
-
-}
 
 
 /**********************************************
@@ -167,136 +63,8 @@ void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_
 *
 *
 **********************************************/
-void receiver(SOCKET mSocket, int* numClients, char outbuffer[BUFSIZE], bool* canWrite)
-{
-	char buffer[BUFSIZE] = "";	//data buffer
-	int connected = 1;	
-
-	while( connected != -1 )
-	{
-		//recv() is a blocking function, meaning program flow will halt here until
-		//somebody sends something
-		connected = recv(mSocket, buffer, BUFSIZE, 0);	//recv() will return a -1 if the socket is disconnected
-
-		if (buffer[0] != NULL)
-		{
-			cout << "received: " << endl << buffer << endl;
-			strcat(buffer, " -from server");
-			send(mSocket, buffer, BUFSIZE, 0);	//send the data back that was recieved
-			cout << "echoed!" << endl << endl;
-		}
-
-		buffer[0] = '\0';
-	}
-
-	cout << "client disconnected" << endl << endl;
-	closesocket(mSocket);	//close the socket
-	--(*numClients);
-	cout << (*numClients) << " clients connected" << endl;
-
-	return;
-}
-
-///**********************************************
-//*	sender()
-//*
-//*	Description:
-//*		Communicates on the socket. Currently just echos back whatever is sent to the server
-//*		
-//*
-//*	input parameters:
-//*
-//*	returns:
-//*
-//*
-//*
-//**********************************************/
-//void sender(SOCKET mSocket, bool &run, char outbuffer[BUFSIZE], bool &canWrite)
-//{
-//
-//	while((run))
-//	{
-//		if (outbuffer[0] != '\0')
-//		{
-//			send(mSocket, outbuffer, BUFSIZE, 0);
-//
-//		}	 
-//	}
-//}
 
 
-///**********************************************
-//*	cleanArray()
-//*
-//*	Description:
-//*		Removes invalid entries from the socket list
-//*		
-//*
-//*	input parameters:
-//*
-//*	returns:
-//*
-//*
-//*
-//**********************************************/
-//void cleanArray(SOCKET Clients[MAXCLIENTS], int* numClients)
-//{
-//	SOCKET temp = NULL;
-//
-//	for (int i=0; i< (*numClients); ++i)
-//	{
-//		if (Clients[i] == NULL)
-//		{
-//			if (i <= (*numClients-2))
-//			{
-//				Clients[i] = Clients[i+1];
-//				Clients[i+1] = NULL;
-//			}
-//		}
-//	}
-//}
-//
-//
-//void cleanArray(int Clients[MAXCLIENTS], int* numClients)
-//{
-//	int temp = NULL;
-//	bool clean = false;
-//
-//	int k=0;
-//
-//	for (k=0; Clients[k] !=NULL; ++k);
-//	if (k==*numClients)
-//		clean = true;
-//
-//	while(!clean)
-//	{
-//
-//		for (int i=0; i< MAXCLIENTS; ++i)
-//		{
-//			if (Clients[i] == NULL)
-//			{
-//				if (i <= (MAXCLIENTS-2))
-//				{
-//					Clients[i] = Clients[i+1];
-//					Clients[i+1] = NULL;
-//				}
-//			}
-//
-//			for(int j=0; j<MAXCLIENTS; ++j)
-//			{
-//				cout << j << ": " << Clients[j] << endl;
-//			}
-//			cout << endl;
-//
-//			for (k=0; Clients[k] !=NULL; ++k);
-//			if (k==*numClients)
-//			{
-//				clean = true;
-//				break;
-//			}
-//		}
-//	}
-//}
 
 
 /***************************************************************************************************************
@@ -335,17 +103,24 @@ void MsgBuffer::deconstructor(Msg* node)
 
 void MsgBuffer::queue(char input[BUFSIZE])
 {
-	Msg* walker  = this->root;
+	Msg* walker;
 
+	if (this->root != NULL)
+	{
+		walker = this->root;
 	//walks through the queue to the end
-	if (walker != NULL)
-		while(walker->next != NULL)
+		while(walker->next!= NULL)
 			walker = walker->next;
-
-	walker->next = new Msg;	//creates a new message and attaches it to the end
-
-	walker = walker->next;
-
+		walker->next = new Msg;
+		walker = walker->next;
+	}
+	else
+	{
+		root = new Msg;
+		walker = this->root;
+	}
+		
+	
 	walker->next = NULL;	//null the pointer for the last message
 
 	//copy the input message to the new Msg element
@@ -382,7 +157,7 @@ void MsgBuffer::dequeue(char output[BUFSIZE])
 
 /***************************************************************************************************************
 ****************************************************************************************************************
-*	ClientList Class
+*	BattleServer Class
 *
 *
 *
@@ -393,55 +168,214 @@ void MsgBuffer::dequeue(char output[BUFSIZE])
 *
 *
 ***************************************************************************************************************/
-ClientList::ClientList(void)
+BattleServer::BattleServer(void)
 {
 	this->root = NULL;
+	this->numClients = 0;
+	this->run = false;
+	this->writelock = false;
+	this->idCounter = 0;
 
 	return;
 }
 
-ClientList::~ClientList(void)
+BattleServer::~BattleServer(void)
 {
-	deconstructor(this->root);
+	Deconstructor(this->root);
 }
 
-void ClientList::deconstructor(SocketNode* node)
+void BattleServer::Deconstructor(SocketNode* node)
 {
 	if (node != NULL)
 	{
-		deconstructor(node->next);
+		Deconstructor(node->next);
 		delete node;
 	}
 }
 
-void ClientList::add(SOCKET newSocket)
+
+
+void BattleServer::Start(void)
 {
-	SocketNode* walker  = this->root;
+	int mPort = 3410; //listening port
+	char mIpAddr[16] = "127.0.0.1"; //self IP iddress
+	SOCKET mListenSocket = NULL, tempSocket = NULL; //socket initialization
+	WSADATA wsadata; //variable used for initializing the socket software stuff
+	SOCKADDR listen_socket_info;	//variable used for inititalizing the listening socket
+	int socket_size = sizeof(listen_socket_info);	//size of the listening socket, used for initialization
 
+	cout << "Starting Server" << endl;
+
+	if (WSAStartup(SCK_VERSION1, &wsadata))		//initialize socket stuff
+		cout << "WSAStartup failed" << endl;
+	//else
+		//cout << "WSAStartup successful" << endl;
+
+	if (StartListening(mPort, mIpAddr, mListenSocket))	//startListening() returns successful if all initialization things went well
+	{	
+		run = true;
+		thread exiterThread(&BattleServer::ExitPrompt, this);	//this thread waits for the "exit" command to be entered on the terminal. 
+		thread accepterThread(&BattleServer::Accepter, this, mListenSocket, listen_socket_info, socket_size); //this thread accepts new clients (which then starts a talking thread for the new client)
+		thread senderThread(&BattleServer::Sender, this);	//this thread processes the message queue and sends it to everyone
+
+		exiterThread.join(); //wait for the exit command to be entered on the terminal
+		accepterThread.join(); //wait for all connections and other threads to end
+		senderThread.join();
+
+		closesocket(mListenSocket); //close the listening socket
+	}
+
+	cout << "Done!" << endl;
+	//system("pause");
+
+	WSACleanup();	//not sure exactly what this does, but we're always supposed to call this at the end (I think it closes sockets, etc) 
+
+}
+
+bool BattleServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener)
+{
+
+	SOCKADDR_IN socket_info;
+	int bind_status;
+
+	socket_info.sin_family = AF_INET;	//type of connection (use this)
+	socket_info.sin_port = htons(PortNo);	//the port number. (htons() is a function to convert it to the proper format)
+	//socket_info.sin_addr.s_addr = inet_addr(IPaddr); //only accept connections from specified IP address
+	socket_info.sin_addr.s_addr = htonl (INADDR_ANY);  //accept connections from any IP address
+
+	listener = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);	//initial the socket for ipv4, and a TCP streaming socket
+	if (listener == INVALID_SOCKET)
+	{
+		cout << "Socket creation failed" << endl;
+		return false;
+	}
+	//else
+	//cout << "Socket creation successful" << endl;
+
+	bind_status = bind(listener, (LPSOCKADDR) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
+
+	if (bind_status == SOCKET_ERROR)
+	{
+		cout << "Socket binding failed" << endl;
+		return false;
+	}
+	else
+	{
+		//cout << "Socket binding successful" << endl;
+		cout << "Starting to listen...";
+		listen(listener, SOMAXCONN);	//causes the socket to start listening. SOMAXCONN is a system constant specifying the max number of connections possible at once
+		cout << "listening..." << endl;
+	}
+
+	return true;
+}
+
+
+void BattleServer::ExitPrompt(void)
+{
+	string buffer;
+	do
+	{
+		cout << "Type \"exit\" to stop server" << endl;
+
+		cin >> buffer;
+
+		if (buffer == "exit")
+			run = false;
+
+	}while (run);	//the run variable is used by the other threads to know when to quit
+
+	return;
+}
+
+void BattleServer::AddClient(SOCKET newSocket)
+{
+	SocketNode* walker = NULL;
+
+	if (this->root != NULL)
+	{
+		walker = this->root;
 	//walks through the queue to the end
-	if (walker != NULL)
-		while(walker->next != NULL)
+		while(walker->next!= NULL)
 			walker = walker->next;
-
-	walker->next = new SocketNode;	//creates a new SocketNode and attaches it to the end
-
-	walker = walker->next;
+		walker->next = new SocketNode;
+		walker = walker->next;
+	}
+	else
+	{
+		root = new SocketNode;
+		walker = this->root;
+	}
 
 	walker->next = NULL;	//null the pointer for the last node
 
 	//add new socket and thread and stuff
 
 	walker->mSocket = newSocket;
-	thread temp(&ClientList::receiver, this, walker->mSocket);	//start a thread for listening to the sockets
-	walker->mThread.swap(temp);	//attached thread handle to the node
+	thread temp(&BattleServer::Receiver, this, walker->mSocket, idCounter);	//start a thread for listening to the sockets
+	walker->mThread.swap(temp);	//attaches thread handle to the node
+	walker->mId = this->idCounter;
+	++this->idCounter;
 
 	return;
 }
 
-void ClientList::receiver(SOCKET mSocket)
+void BattleServer::Accepter(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size)
+{
+	SOCKET tempSocket;
+
+	u_long iMode = 1;
+	ioctlsocket(mListenSocket, FIONBIO, &iMode);	//sets the listening socket to be nonblocking, so we can poll it for new connections
+
+ 	while(run)
+	{
+		tempSocket = NULL;
+		/*	accept() is a normally a blocking function, meaning that program flow would halt here
+		but because of the ioctlsocket() call up above, it makes the function non-blocking, so
+		we need to use a polling method
+		*/
+		tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);	
+
+		iMode = 0;	//we want the socket that talks to be blocking 
+		ioctlsocket(tempSocket, FIONBIO, &iMode);	//sets the communication socket to be blocking
+
+		if (tempSocket != INVALID_SOCKET)	//accept() will return an invalid socket if there is no pending connections
+		{
+			AddClient(tempSocket);
+			cout << "client added!" << endl << numClients << " clients connected" << endl << endl;
+		}
+
+		sleep_for(milliseconds(IDLE_PERIOD));
+	}
+
+	cout << "trying to exit...waiting for all clients to disconnect..." << endl;
+
+	SocketNode* walker = root;
+	
+	while (walker != NULL)
+	{
+		closesocket(walker->mSocket);	//close all of the socket connections
+		walker = walker->next;
+	}
+
+	walker = root;
+	while (walker != NULL)
+	{
+		walker->mThread.join(); //ensures all the communication threads have been killed
+		walker = walker->next;
+	}
+}
+
+void BattleServer::Receiver(SOCKET mSocket, int Id)
 {
 	char buffer[BUFSIZE] = "";	//data buffer
 	int connected = 1;	
+	++numClients;
+	
+	char identifier[32] = "";
+	sprintf(identifier, " -from client %d", Id);
+
+
 
 	while( connected != -1 )
 	{
@@ -452,14 +386,14 @@ void ClientList::receiver(SOCKET mSocket)
 		if (buffer[0] != NULL)
 		{
 			cout << "received: " << endl << buffer << endl;
-			strcat(buffer, " -from server");
+			strcat(buffer, identifier);
 			this->mBuffer.queue(buffer);
 			//send(mSocket, buffer, BUFSIZE, 0);	//send the data back that was recieved
 			//cout << "echoed!" << endl << endl;
 		}
 
 		buffer[0] = '\0';
-	}
+	}	
 
 	cout << "client disconnected" << endl << endl;
 	closesocket(mSocket);	//close the socket
@@ -470,7 +404,7 @@ void ClientList::receiver(SOCKET mSocket)
 }
 
 
-void ClientList::sender(void)
+void BattleServer::Sender(void)
 {
 	char message[BUFSIZE] = {'\0'};
 	SocketNode* walker;
@@ -491,7 +425,4 @@ void ClientList::sender(void)
 			sleep_for(milliseconds(IDLE_PERIOD)); //if there are no messages in the queue, chill for a bit
 
 	}
-
-
-
 }

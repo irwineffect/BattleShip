@@ -65,34 +65,44 @@ private:
 
 };
 
-//ClientList Class
+//BattleServer Class
 
 typedef struct socketnode	//node for the buffer
 {
 	SOCKET mSocket;
 	thread mThread;
+	int mId;
 	struct socketnode* next;
 
 } SocketNode;
 
-class ClientList	//the class
+class BattleServer	//the class
 {
 public:
-
-		ClientList::ClientList(void);	//constructor
-		ClientList::~ClientList(void); //destructor
-	void ClientList::add(SOCKET newSocket);
+		//Public Methods	
+		BattleServer::BattleServer(void);	//constructor
+		BattleServer::~BattleServer(void); //destructor
+		void BattleServer::Start(void);
 	
 
 private:
-	void ClientList::deconstructor(SocketNode* node);	//destructor helper function
-	void ClientList::accepter(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool& run);
-	void ClientList::receiver(SOCKET mSocket);
-	void ClientList::sender(void);
+	//Private Methods
+	void BattleServer::Deconstructor(SocketNode* node);	//destructor helper function
+	bool BattleServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener);
+	void BattleServer::ExitPrompt(void);
+	void BattleServer::Accepter(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size);
+	void BattleServer::AddClient(SOCKET newSocket);
+	void BattleServer::Receiver(SOCKET mSocket, int Id);
+	void BattleServer::Sender(void);
+
+
+	//Private Members
 	SocketNode* root;
 	MsgBuffer mBuffer;
 	int numClients;
+	int idCounter;
 	bool run;
+	bool writelock;
 
 };
 

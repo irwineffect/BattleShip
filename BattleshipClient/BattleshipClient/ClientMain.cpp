@@ -5,7 +5,7 @@ int main (void)
 {
 
 	int mPort = 3410;	//port to connect on
-	char mIpAddr[16] = "127.0.0.1";	//ip address to connect to (defaults
+	char mIpAddr[16] = "192.168.1.5";	//ip address to connect to (defaults
 	char buffer[BUF_SIZE] = "";	//data buffer
 	
 	cout << "Starting Client" << endl;
@@ -42,25 +42,21 @@ int main (void)
 	else
 	{
 		cout << "Socket connection successful" << endl;
-		
+		thread temp(Receiver, mSocket);
 		int connected = 1;
 		cout << endl << endl;
 		while (1)
 		{
 			cin >> buffer;	//read data from the user
-			send(mSocket, buffer, BUF_SIZE, 0);	//send the data to the server
+			connected =	send(mSocket, buffer, BUF_SIZE, 0);	//send the data to the server
 			cout << "Sent: " << endl << buffer << endl;
 
-			buffer[0] = NULL;
-
-			//read the data from the server (this function is blocking, so you wait until the server replies
-			//recv() will return -1 if the socket becomes disconnected
-			connected = recv(mSocket, buffer, BUF_SIZE, 0); 
-			cout << "Received:" << endl << buffer << endl << endl;
-
+			buffer[0] = '\0';
+		
 			if (connected == -1)	//if the socket is disconnected
 				break;
 		}
+		temp.join();
 		
 	}
 	
@@ -68,6 +64,8 @@ int main (void)
 //	system("pause");
 
 	cout << "Disconnected" << endl;
+
+
 	
 	closesocket(mSocket);	//close the socket
 	WSACleanup();	//not sure exactly what this does, but we're always supposed to call this at the end (I think it closes sockets, etc) 
