@@ -21,4 +21,20 @@ using std::thread;
 
 void Receiver(SOCKET mSocket);
 
+class CommClient
+{
+public:
+
+
+
+
+private:
+
+
+
+
+
+
+};
+
 #endif
