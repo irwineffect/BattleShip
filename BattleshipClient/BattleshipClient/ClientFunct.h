@@ -24,11 +24,18 @@ void Receiver(SOCKET mSocket);
 class CommClient
 {
 public:
-
-
+	CommClient::CommClient(int mPort = 80, char mIpAddr[32] = "76.178.149.238");
+	CommClient::~CommClient();
+	void CommClient::Start();
 
 
 private:
+	void CommClient::Receiver(SOCKET mSocket);
+
+
+	bool run;
+	SOCKADDR_IN socket_info;
+	SOCKET mSocket;
 
 
 

@@ -4,9 +4,10 @@
 int main (void)
 {
 
-	int mPort = 80;	//port to connect on
+	int mPort = 3410;	//port to connect on
 	char mIpAddr[32] = "76.178.149.238";	//ip address to connect to (defaults
 	char buffer[BUF_SIZE] = "";	//data buffer
+	struct hostent *remoteHost;
 	
 	cout << "Starting Client" << endl;
 	
@@ -14,15 +15,28 @@ int main (void)
 	
 	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
 
+	remoteHost = gethostbyname("irwineffect.dyndns.org");
+	if( remoteHost == NULL)
+	{
+		return 1;
+	}
+	else
+	{
+
+	}
+
 	//cout << "enter host ip -> ";	//enter ip address to connect to
 	//cin >> mIpAddr;
 	
 	SOCKADDR_IN socket_info; //variable holding information for setting up the socket
 	socket_info.sin_family = AF_INET;	//use ipv4
 	socket_info.sin_port = htons(mPort);	//use selected port
-	socket_info.sin_addr.s_addr = inet_addr(mIpAddr);	//use selected address
+	//socket_info.sin_addr.s_addr = inet_addr(mIpAddr);	//use selected address
+	socket_info.sin_addr.s_addr = *(u_long*)remoteHost->h_addr_list[0]; //lookup ip address
+	
 
 	
+
 	SOCKET mSocket;	//declaration of the socket
 	
 	mSocket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);	//initialze the socket to use ipv4, tcp streaming
