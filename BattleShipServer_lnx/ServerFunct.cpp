@@ -1,71 +1,5 @@
 #include "ServerFunct.h"
 
-/**********************************************
-*	startListening()
-*
-*	Description:
-*		This function initializes the listening socket and begins listening for connections
-*
-*	input parameters:
-*
-*	returns:
-*
-*
-*
-**********************************************/
-
-
-/**********************************************
-*	exitPrompt()
-*
-*	Description:
-*		Waits for the user to type "exit" at the command prompt. When this happens, it changes the
-*		"run" variable to false, which begins the process of stopping all other threads.
-*
-*	input parameters:
-*
-*	returns:
-*
-*
-*
-**********************************************/
-
-
-
-/**********************************************
-*	accepterLoop()
-*
-*	Description:
-*		Accepts new connections. When a new client attempts to connect, gives it a new socket to comuunicate on,
-*		then starts a new thread that talks on that socket. When the 'run' variable becomes false, it closes
-*		all communication threads and then exits
-*
-*	input parameters:
-*
-*	returns:
-*
-*
-*
-**********************************************/
-
-
-/**********************************************
-*	receiver()
-*
-*	Description:
-*		Communicates on the socket. Currently just echos back whatever is sent to the server
-*		
-*
-*	input parameters:
-*
-*	returns:
-*
-*
-*
-**********************************************/
-
-
-
 
 /***************************************************************************************************************
 ****************************************************************************************************************
@@ -197,7 +131,7 @@ void BattleServer::Deconstructor(SocketNode* node)
 
 void BattleServer::Start(void)
 {
-	int mPort = 80; //listening port
+	int mPort = PORT; //listening port
 	char mIpAddr[16] = "127.0.0.1"; //self IP iddress
 	SOCKET mListenSocket = NULL, tempSocket = NULL; //socket initialization
 	struct sockaddr listen_socket_info;	//variable used for inititalizing the listening socket
@@ -242,21 +176,24 @@ bool BattleServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener)
 		cout << "Socket creation failed" << endl;
 		return false;
 	}
-	//else
-	//cout << "Socket creation successful" << endl;
+	else
+	{
+		cout << "Socket creation successful, Socket number: " << listener << endl;
+	
 
+	}
 //	bind_status = bind(listener, (LPSOCKADDR) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
 
 	bind_status = bind(listener, (const sockaddr*) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
 
 	if (bind_status == SOCKET_ERROR)
 	{
-		cout << "Socket binding failed" << endl;
+		cout << "Socket binding failed, error: " << bind_status << endl;
 		return false;
 	}
 	else
 	{
-		//cout << "Socket binding successful" << endl;
+		cout << "Socket binding successful" << endl;
 		cout << "Starting to listen...";
 		listen(listener, SOMAXCONN);	//causes the socket to start listening. SOMAXCONN is a system constant specifying the max number of connections possible at once
 		cout << "listening..." << endl;
@@ -310,6 +247,7 @@ void BattleServer::AddClient(SOCKET newSocket)
 	thread temp(&BattleServer::Receiver, this, walker->mSocket, idCounter);	//start a thread for listening to the sockets
 	walker->mThread.swap(temp);	//attaches thread handle to the node
 	walker->mId = this->idCounter;
+	send(walker->mSocket, "welcome to the server!", sizeof("welcome to the server!"), 0);
 	++this->idCounter;
 
 	return;
@@ -331,14 +269,14 @@ void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, i
 		we need to use a polling method
 		*/
 		tempSocket = accept(mListenSocket, (struct sockaddr*) &listen_socket_info,(socklen_t*) &socket_size);	
-
+		//cout << "tempSocket: " << tempSocket << endl;
 		//iMode = 0;	//we want the socket that talks to be blocking 
 		//ioctlsocket(tempSocket, FIONBIO, &iMode);	//sets the communication socket to be blocking
 
 		if (tempSocket != INVALID_SOCKET)	//accept() will return an invalid socket if there is no pending connections
 		{
 			AddClient(tempSocket);
-			cout << "client added!" << endl << numClients << " clients connected" << endl << endl;
+			cout << "client added!" << endl << (numClients+1) << " clients connected" << endl << endl;
 		}
 
 		sleep_for(milliseconds(IDLE_PERIOD));

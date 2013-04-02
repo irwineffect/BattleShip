@@ -20,8 +20,9 @@
 #define MAXCLIENTS 10
 #define IDLE_PERIOD 100 //time to sleep for on the accepting thread (this thread uses polling)
 #define SOCKET int
-#define INVALID_SOCKET 0
+#define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
+#define PORT 3410 
 #define closesocket close
 
 //Using Statements
