@@ -1,71 +1,5 @@
 #include "ServerFunct.h"
 
-/**********************************************
-*	startListening()
-*
-*	Description:
-*		This function initializes the listening socket and begins listening for connections
-*
-*	input parameters:
-*
-*	returns:
-*
-*
-*
-**********************************************/
-
-
-/**********************************************
-*	exitPrompt()
-*
-*	Description:
-*		Waits for the user to type "exit" at the command prompt. When this happens, it changes the
-*		"run" variable to false, which begins the process of stopping all other threads.
-*
-*	input parameters:
-*
-*	returns:
-*
-*
-*
-**********************************************/
-
-
-
-/**********************************************
-*	accepterLoop()
-*
-*	Description:
-*		Accepts new connections. When a new client attempts to connect, gives it a new socket to comuunicate on,
-*		then starts a new thread that talks on that socket. When the 'run' variable becomes false, it closes
-*		all communication threads and then exits
-*
-*	input parameters:
-*
-*	returns:
-*
-*
-*
-**********************************************/
-
-
-/**********************************************
-*	receiver()
-*
-*	Description:
-*		Communicates on the socket. Currently just echos back whatever is sent to the server
-*		
-*
-*	input parameters:
-*
-*	returns:
-*
-*
-*
-**********************************************/
-
-
-
 
 /***************************************************************************************************************
 ****************************************************************************************************************
@@ -108,7 +42,7 @@ void MsgBuffer::queue(char input[BUFSIZE])
 	if (this->root != NULL)
 	{
 		walker = this->root;
-	//walks through the queue to the end
+		//walks through the queue to the end
 		while(walker->next!= NULL)
 			walker = walker->next;
 		walker->next = new Msg;
@@ -119,8 +53,8 @@ void MsgBuffer::queue(char input[BUFSIZE])
 		root = new Msg;
 		walker = this->root;
 	}
-		
-	
+
+
 	walker->next = NULL;	//null the pointer for the last message
 
 	//copy the input message to the new Msg element
@@ -197,19 +131,24 @@ void BattleServer::Deconstructor(SocketNode* node)
 
 void BattleServer::Start(void)
 {
-	int mPort = 80; //listening port
+	int mPort = PORT; //listening port
 	char mIpAddr[16] = "127.0.0.1"; //self IP iddress
 	SOCKET mListenSocket = NULL, tempSocket = NULL; //socket initialization
-	WSADATA wsadata; //variable used for initializing the socket software stuff
-	SOCKADDR listen_socket_info;	//variable used for inititalizing the listening socket
+	sockaddr listen_socket_info;	//variable used for inititalizing the listening socket
 	int socket_size = sizeof(listen_socket_info);	//size of the listening socket, used for initialization
+
+#ifdef WINDOWS
+	WSADATA wsadata; //variable used for initializing the socket software stuff
+#endif
 
 	cout << "Starting Server" << endl;
 
+#ifdef WINDOWS
 	if (WSAStartup(SCK_VERSION1, &wsadata))		//initialize socket stuff
 		cout << "WSAStartup failed" << endl;
 	//else
-		//cout << "WSAStartup successful" << endl;
+	//cout << "WSAStartup successful" << endl;
+#endif
 
 	if (StartListening(mPort, mIpAddr, mListenSocket))	//startListening() returns successful if all initialization things went well
 	{	
@@ -222,20 +161,30 @@ void BattleServer::Start(void)
 		accepterThread.join(); //wait for all connections and other threads to end
 		senderThread.join();
 
+#ifdef WINDOWS
 		closesocket(mListenSocket); //close the listening socket
+#elif defined (LINUX)
+		close (mListenSocket);
+#endif
 	}
 
 	cout << "Done!" << endl;
 	//system("pause");
 
+#ifdef WINDOWS
 	WSACleanup();	//not sure exactly what this does, but we're always supposed to call this at the end (I think it closes sockets, etc) 
-
+#endif
 }
 
 bool BattleServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener)
 {
 
+#ifdef WINDOWS
 	SOCKADDR_IN socket_info;
+#elif defined (LINUX)
+	struct sockaddr_in socket_info;
+#endif
+
 	int bind_status;
 
 	socket_info.sin_family = AF_INET;	//type of connection (use this)
@@ -252,8 +201,11 @@ bool BattleServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener)
 	//else
 	//cout << "Socket creation successful" << endl;
 
+#ifdef WINDOWS
 	bind_status = bind(listener, (LPSOCKADDR) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
-
+#elif defined (LINUX)
+	bind_status = bind(listener, (const sockaddr*) &socket_info, sizeof(socket_info));	//binds the socket to listen to a port
+#endif
 	if (bind_status == SOCKET_ERROR)
 	{
 		cout << "Socket binding failed" << endl;
@@ -295,7 +247,7 @@ void BattleServer::AddClient(SOCKET newSocket)
 	if (this->root != NULL)
 	{
 		walker = this->root;
-	//walks through the queue to the end
+		//walks through the queue to the end
 		while(walker->next!= NULL)
 			walker = walker->next;
 		walker->next = new SocketNode;
@@ -320,25 +272,32 @@ void BattleServer::AddClient(SOCKET newSocket)
 	return;
 }
 
-void BattleServer::Accepter(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size)
+void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, int socket_size)
 {
 	SOCKET tempSocket;
 
+#ifdef WINDOWS
 	u_long iMode = 1;
 	ioctlsocket(mListenSocket, FIONBIO, &iMode);	//sets the listening socket to be nonblocking, so we can poll it for new connections
+#elif defined (LINUX)
+	fcntl(mListenSocket, F_SETFL, O_NONBLOCK);
+#endif
 
- 	while(run)
+	while(run)
 	{
 		tempSocket = NULL;
 		/*	accept() is a normally a blocking function, meaning that program flow would halt here
 		but because of the ioctlsocket() call up above, it makes the function non-blocking, so
 		we need to use a polling method
 		*/
-		tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);	
 
+#ifdef WINDOWS
+		tempSocket = accept(mListenSocket, (SOCKADDR*) &listen_socket_info, &socket_size);	
 		iMode = 0;	//we want the socket that talks to be blocking 
 		ioctlsocket(tempSocket, FIONBIO, &iMode);	//sets the communication socket to be blocking
-
+#elif defined (LINUX)
+		tempSocket = accept(mListenSocket, (struct sockaddr*) &listen_socket_info, (socklen_t*) &socket_size);	
+#endif
 		if (tempSocket != INVALID_SOCKET)	//accept() will return an invalid socket if there is no pending connections
 		{
 			AddClient(tempSocket);
@@ -351,10 +310,14 @@ void BattleServer::Accepter(SOCKET mListenSocket, SOCKADDR listen_socket_info, i
 	cout << "trying to exit...waiting for all clients to disconnect..." << endl;
 
 	SocketNode* walker = root;
-	
+
 	while (walker != NULL)
 	{
+#ifdef WINDOWS
 		closesocket(walker->mSocket);	//close all of the socket connections
+#elif defined (LINUX)
+		close(walker->mSocket);
+#endif		
 		walker = walker->next;
 	}
 
@@ -371,7 +334,7 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 	char buffer[BUFSIZE] = "";	//data buffer
 	int connected = 1;	
 	++numClients;
-	
+
 	char identifier[32] = "";
 	sprintf(identifier, " -from client %d", Id);
 
@@ -386,7 +349,7 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 		if (buffer[0] != NULL)
 		{
 			cout << "received: " << endl << buffer << endl;
-			strcat(buffer, identifier);
+			//strcat(buffer, identifier);
 			this->mBuffer.queue(buffer);
 			//send(mSocket, buffer, BUFSIZE, 0);	//send the data back that was recieved
 			//cout << "echoed!" << endl << endl;
@@ -396,7 +359,13 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 	}	
 
 	cout << "client disconnected" << endl << endl;
+
+#ifdef WINDOWS
 	closesocket(mSocket);	//close the socket
+#elif defined (LINUX)
+	close(mSocket);
+#endif
+
 	--numClients;
 	cout << numClients << " clients connected" << endl;
 

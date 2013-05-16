@@ -1,12 +1,30 @@
 #ifndef SERVERFUNCT_H
 #define SERVERFUNCT_H
 
+
+//uncomment proper operating system
+#define WINDOWS
+//#define LINUX
+
+
+#define _CRT_SECURE_NO_WARNINGS	//hides security warnings
+
 //Libraries
 #include <iostream>
-#include <winsock.h>
 #include <string.h>
 #include <thread>
 #include <string>
+
+#ifdef WINDOWS
+	#include <winsock.h>
+#elif defined(LINUX)
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <netdb.h>
+	#include <arpa/inet.h>
+	#include <netinet/in.h>
+	#include <fcntl.h>
+#endif
 
 //System constants
 #define SCK_VERSION1	0x0101
@@ -14,7 +32,13 @@
 #define BUFSIZE	128
 #define MAXCLIENTS 10
 #define IDLE_PERIOD 100 //time to sleep for on the accepting thread (this thread uses polling)
+#define PORT 3410
 
+#ifdef LINUX
+	#define SOCKET int
+	#define INVALID_SOCKET -1
+	#define SOCKET_ERROR -1
+#endif
 
 //Using Statements
 using std::cin;
@@ -25,19 +49,6 @@ using std::this_thread::sleep_for;
 using std::chrono::milliseconds;
 using std::string;
 //using namespace std;
-
-//Function Headers
-bool startListening(int PortNo, char* IPaddr, SOCKET &listener);
-void exitPrompt(bool& run);
-void accepterLoop(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size, bool& run);
-void receiver(SOCKET mSocket, int *numClients, char outbuffer[BUFSIZE], bool *canWrite);
-//void sender(SOCKET mSocket, bool &run, char outbuffer[BUFSIZE], bool &canWrite);
-//void cleanup(
-
-//array management
-//void cleanArray(SOCKET Clients[MAXCLIENTS], int* numClients);
-//void cleanArray(int Clients[MAXCLIENTS], int* numClients);
-
 
 
 //Msgbuffer Class
@@ -53,21 +64,21 @@ class MsgBuffer	//the class
 {
 public:
 
-		MsgBuffer::MsgBuffer(void);	//constructor
-		MsgBuffer::~MsgBuffer(void); //destructor
-	void MsgBuffer::queue(char input[BUFSIZE]);
-	void MsgBuffer::dequeue(char output[BUFSIZE]);
+		MsgBuffer(void);	//constructor
+		~MsgBuffer(void); //destructor
+	void queue(char input[BUFSIZE]);
+	void dequeue(char output[BUFSIZE]);
 	
 
 private:
-	void MsgBuffer::deconstructor(Msg* node);	//destructor helper function
+	void deconstructor(Msg* node);	//destructor helper function
 	Msg* root;
 
 };
 
 //BattleServer Class
 
-typedef struct socketnode	//node for the buffer
+typedef struct socketnode	//node for the client list
 {
 	SOCKET mSocket;
 	thread mThread;
@@ -80,20 +91,20 @@ class BattleServer	//the class
 {
 public:
 		//Public Methods	
-		BattleServer::BattleServer(void);	//constructor
-		BattleServer::~BattleServer(void); //destructor
-		void BattleServer::Start(void);
+		BattleServer(void);	//constructor
+		~BattleServer(void); //destructor
+		void Start(void);
 	
 
 private:
 	//Private Methods
-	void BattleServer::Deconstructor(SocketNode* node);	//destructor helper function
-	bool BattleServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener);
-	void BattleServer::ExitPrompt(void);
-	void BattleServer::Accepter(SOCKET mListenSocket, SOCKADDR listen_socket_info, int socket_size);
-	void BattleServer::AddClient(SOCKET newSocket);
-	void BattleServer::Receiver(SOCKET mSocket, int Id);
-	void BattleServer::Sender(void);
+	void Deconstructor(SocketNode* node);	//destructor helper function
+	bool StartListening(int PortNo, char* IPaddr, SOCKET &listener);
+	void ExitPrompt(void);
+	void Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, int socket_size);
+	void AddClient(SOCKET newSocket);
+	void Receiver(SOCKET mSocket, int Id);
+	void Sender(void);
 
 
 	//Private Members
