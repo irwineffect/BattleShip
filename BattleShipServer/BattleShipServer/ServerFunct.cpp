@@ -267,7 +267,8 @@ void BattleServer::AddClient(SOCKET newSocket)
 	thread temp(&BattleServer::Receiver, this, walker->mSocket, idCounter);	//start a thread for listening to the sockets
 	walker->mThread.swap(temp);	//attaches thread handle to the node
 	walker->mId = this->idCounter;
-	++this->idCounter;
+	walker->active = true;
+	++(this->idCounter);
 
 	return;
 }
@@ -287,7 +288,7 @@ void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, i
 	{
 		tempSocket = NULL;
 		/*	accept() is a normally a blocking function, meaning that program flow would halt here
-		but because of the ioctlsocket() call up above, it makes the function non-blocking, so
+		but because of the ioctlsocket()/fcntl() call up above, it makes the function non-blocking, so
 		we need to use a polling method
 		*/
 
@@ -338,8 +339,6 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 	char identifier[32] = "";
 	sprintf(identifier, " -from client %d", Id);
 
-
-
 	while( connected != -1 )
 	{
 		//recv() is a blocking function, meaning program flow will halt here until
@@ -366,6 +365,7 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 	close(mSocket);
 #endif
 
+	Inactivate(Id); 
 	--numClients;
 	cout << numClients << " clients connected" << endl;
 
@@ -386,7 +386,8 @@ void BattleServer::Sender(void)
 		{
 			while(walker != NULL)	//goes through the queue, sends the message to everyone.
 			{
-				send(walker->mSocket, message, BUFSIZE, 0);
+				if (walker->active)
+					send(walker->mSocket, message, BUFSIZE, 0);
 				walker = walker->next;
 			}
 		}
@@ -394,4 +395,25 @@ void BattleServer::Sender(void)
 			sleep_for(milliseconds(IDLE_PERIOD)); //if there are no messages in the queue, chill for a bit
 
 	}
+}
+
+
+void BattleServer::Inactivate(int Id)
+{
+	SocketNode* walker;
+	walker = this->root;
+
+	while (walker != NULL)
+	{
+		if (walker->mId == Id)
+		{
+			walker->active = false;
+			break;
+		}
+		else
+			walker = walker->next;
+	}
+
+
+	return;
 }

@@ -16,22 +16,14 @@ using std::thread;
 //using namespace std;
 
 #define SCK_VERSION2 0x0202
-#define BUF_SIZE 128
-
-//typedef struct {
-//	int i;
-//	char msg[12];
-//	double j; 
-//
-//} TEST;
+#define BUFSIZE 128
 
 
-//void Receiver(SOCKET mSocket);
 
 class CommClient
 {
 public:
-	CommClient::CommClient(int mPort = 80, char mHostname[128] = "irwineffect.dyndns.org");
+	CommClient::CommClient(int mPort = 3410, char mHostname[128] = "");
 	CommClient::~CommClient();
 	void CommClient::Start();
 

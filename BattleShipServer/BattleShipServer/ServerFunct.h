@@ -83,6 +83,7 @@ typedef struct socketnode	//node for the client list
 	SOCKET mSocket;
 	thread mThread;
 	int mId;
+	bool active;
 	struct socketnode* next;
 
 } SocketNode;
@@ -105,6 +106,7 @@ private:
 	void AddClient(SOCKET newSocket);
 	void Receiver(SOCKET mSocket, int Id);
 	void Sender(void);
+	void Inactivate(int Id);
 
 
 	//Private Members

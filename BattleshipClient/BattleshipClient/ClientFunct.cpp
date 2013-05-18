@@ -1,33 +1,5 @@
 #include "ClientFunct.h"
 
-
-
-
-void Receiver(SOCKET mSocket)
-{
-	char buffer[BUF_SIZE] = "";	//data buffer
-	int connected = 1;	
-
-	while( connected != -1 )
-	{
-		//recv() is a blocking function, meaning program flow will halt here until
-		//somebody sends something
-		connected = recv(mSocket, buffer, BUF_SIZE, 0);	//recv() will return a -1 if the socket is disconnected
-
-		if (buffer[0] != NULL)
-		{
-			cout << "received: " << endl << buffer << endl << endl;
-		}
-
-		buffer[0] = '\0';
-	}	
-
-	cout << "disconnected" << endl << endl;
-	closesocket(mSocket);	//close the socket
-
-	return;
-}
-
 /***************************************************************************************************************
 ****************************************************************************************************************
 *	CommClient Class
@@ -43,6 +15,9 @@ void Receiver(SOCKET mSocket)
 ***************************************************************************************************************/
 CommClient::CommClient(int mPort, char mHostname[128])
 {
+	WSADATA wsadata; //variable used for initializing the socket software stuff
+	
+	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
 
 	if(mHostname[0] == '\0') //if the null hostname is specified
 	{
@@ -51,7 +26,7 @@ CommClient::CommClient(int mPort, char mHostname[128])
 	}
 	else //a hostname is given
 	{
-		struct hostent *remoteHost;
+		struct hostent *remoteHost = NULL;
 		remoteHost = gethostbyname(mHostname); //attempt DNS lookup
 
 		if( remoteHost == NULL)
@@ -78,11 +53,8 @@ CommClient::~CommClient()
 void CommClient::Start()
 {
 	int connect_status;
-	WSADATA wsadata; //variable used for initializing the socket software stuff
 
 	cout << "Starting Client" << endl;	
-
-	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
 
 	this->mSocket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);	//initialze the socket to use ipv4, tcp streaming
 	if (this->mSocket == INVALID_SOCKET)
@@ -102,33 +74,16 @@ void CommClient::Start()
 		int connected = 1;
 		cout << endl << endl;
 
-		/*TEST mStruct;
-
-		mStruct.i=3;
-		strcpy(mStruct.msg, "blah");
-		mStruct.j = 3.14;*/
-
-		char buffer[BUF_SIZE] = "";	//data buffer
+		char buffer[BUFSIZE] = "";	//data buffer
 		while (connected != -1)
 		{
-			cin.getline(buffer, BUF_SIZE, '\n');	//read data from the user
+			cin.getline(buffer, BUFSIZE, '\n');	//read data from the user
 			//fflush(stdin);
 			//cin.clear();
-
-			if(buffer[0] == 'X')
-			{
-				cout << "sending struct...";
-				connected =	send(mSocket, buffer, BUF_SIZE, 0);	//send the data to the server
-				cout << "sent!" << endl;
-
-			}
-			else
-			{
-
+			buffer[BUFSIZE-1] = '\0'; //prevent sending too much data
 			
-			connected =	send(mSocket, buffer, BUF_SIZE, 0);	//send the data to the server
+			connected =	send(mSocket, buffer, BUFSIZE, 0);	//send the data to the server
 			cout << "Sent: " << endl << buffer << endl;
-			}
 
 			buffer[0] = '\0';
 		}
@@ -151,7 +106,7 @@ void CommClient::Start()
 
 void CommClient::Receiver(SOCKET mSocket)
 {
-	char buffer[BUF_SIZE] = "";	//data buffer
+	char buffer[BUFSIZE] = "";	//data buffer
 	int connected = 1;	
 
 	//TEST mRecv;
@@ -160,14 +115,8 @@ void CommClient::Receiver(SOCKET mSocket)
 	{
 		//recv() is a blocking function, meaning program flow will halt here until
 		//somebody sends something
-		connected = recv(mSocket, buffer, BUF_SIZE, 0);	//recv() will return a -1 if the socket is disconnected
-		//connected = recv(mSocket, buffer, BUF_SIZE, 0);	//recv() will return a -1 if the socket is disconnected
-		
-		/*if(mRecv.i != 0)
-		{
-		cout << "Received:" << endl;
-		cout  << "i: " << mRecv.i << endl << "msg: " << mRecv.msg << endl << "j: " << mRecv.j << endl << endl;
-		}*/
+		connected = recv(mSocket, buffer, BUFSIZE, 0);	//recv() will return a -1 if the socket is disconnected		
+
 		if (buffer[0] != NULL)
 		{
 			cout << "received: " << endl << buffer << endl << endl;
@@ -181,6 +130,4 @@ void CommClient::Receiver(SOCKET mSocket)
 	closesocket(mSocket);	//close the socket
 
 	return;
-
-
 }
