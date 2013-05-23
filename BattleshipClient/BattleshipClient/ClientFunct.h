@@ -7,7 +7,6 @@
 #include <thread>
 
 
-
 //Using Statements
 using std::cin;
 using std::cout;
@@ -18,24 +17,38 @@ using std::thread;
 #define SCK_VERSION2 0x0202
 #define BUFSIZE 128
 
-
-
 class CommClient
 {
 public:
-	CommClient::CommClient(int mPort = 3410, char mHostname[128] = "");
-	CommClient::~CommClient();
-	void CommClient::Start();
+	CommClient(int mPort = 3410, char mHostname[128] = "");
+	~CommClient();
+	void Start();
 
 
 private:
-	void CommClient::Receiver(SOCKET mSocket);
+	void Receiver(SOCKET mSocket);
 
-
+//class members
 	bool run;
 	SOCKADDR_IN socket_info;
 	SOCKET mSocket;
 
+};
+
+
+class GameBoard
+{
+public:
+	GameBoard(int size);
+	~GameBoard();
+	void Display(void);
+
+private:
+	
+	
+//class members	
+	int mArraysize;
+	char** mArray;
 };
 
 #endif

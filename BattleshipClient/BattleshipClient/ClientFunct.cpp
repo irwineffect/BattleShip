@@ -131,3 +131,75 @@ void CommClient::Receiver(SOCKET mSocket)
 
 	return;
 }
+
+
+
+
+
+/***************************************************************************************************************
+****************************************************************************************************************
+*	GameBoard Class
+*
+*
+*
+*
+*
+*
+*
+*
+*
+***************************************************************************************************************/
+GameBoard::GameBoard(int size)
+{
+	int i,j;
+
+	if (size > 26)	//limit the size of the array
+		size = 26;
+
+	mArraysize = size;
+
+	//create the array.
+	mArray = new char*[size];
+
+	for (i=0; i<size; ++i)
+		mArray[i] = new char[size];
+
+	for (i=0; i<size; ++i)
+		for(j=0; j<size; ++j)
+			mArray[i][j] = '-';
+	
+	return;
+}
+
+GameBoard::~GameBoard()
+{
+	for (int i=0; i<mArraysize; ++i)
+		delete[] mArray[i];
+	delete[] mArray;
+
+	return;
+}
+
+void GameBoard::Display(void)
+{
+	int i,j;
+
+	cout << "   ";
+	for (i=0; i<mArraysize; ++i)
+		cout << (char)('A'+i) << ' ';
+	cout << endl;
+
+	for (i=0; i<mArraysize; ++i)
+	{
+		if (i>9)
+			cout << i << ' ';
+		else
+			cout << ' ' << i << ' ';
+
+		for (j=0; j<mArraysize; ++j)
+			cout << mArray[i][j] << ' ';
+		cout << endl;
+	}
+
+	return;
+}
