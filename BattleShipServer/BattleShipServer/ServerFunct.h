@@ -14,6 +14,7 @@
 #include <string.h>
 #include <thread>
 #include <string>
+#include <mutex>
 
 #ifdef WINDOWS
 	#include <winsock.h>
@@ -48,6 +49,7 @@ using std::thread;
 using std::this_thread::sleep_for;
 using std::chrono::milliseconds;
 using std::string;
+using std::mutex;
 //using namespace std;
 
 

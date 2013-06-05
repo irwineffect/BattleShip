@@ -4,13 +4,8 @@
 int main (void)
 {
 
-	/*CommClient mClient(3410, "wycoffranch.dyndns.org");
-	mClient.Start();*/
-
-
-	GameBoard mBoard(10);
-	
-	mBoard.Display();
+	CommClient mClient(3410, "");
+	mClient.Start();
 
 	return 0;
 }
