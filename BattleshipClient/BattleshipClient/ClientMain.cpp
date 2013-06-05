@@ -12,5 +12,9 @@ int main (void)
 	
 	mBoard.Display();
 
+	//mBoard.Place(3,3,1,5, 'B');
+	mBoard.Shoot(2,8);
+	mBoard.Display();
+
 	return 0;
 }
