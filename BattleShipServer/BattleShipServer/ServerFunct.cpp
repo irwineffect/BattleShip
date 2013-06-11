@@ -39,6 +39,8 @@ void MsgBuffer::queue(char input[BUFSIZE])
 {
 	Msg* walker;
 
+	mWritelock.lock();	//begin critical section of code
+
 	if (this->root != NULL)
 	{
 		walker = this->root;
@@ -61,12 +63,18 @@ void MsgBuffer::queue(char input[BUFSIZE])
 	for (int i=0; i < BUFSIZE; ++i)
 		walker->message[i] = input[i];
 
+	mWritelock.unlock();	//end critical section of code
+
 	return;
 }
 
 void MsgBuffer::dequeue(char output[BUFSIZE])
 {
-	Msg* temp = this->root;	
+	Msg* temp = NULL;
+
+	mWritelock.lock();	//begin critical section of code
+
+	temp = this->root;
 
 	if (temp != NULL)	//check to make sure the queue isn't empty
 	{
@@ -83,6 +91,8 @@ void MsgBuffer::dequeue(char output[BUFSIZE])
 		output[0] = '\0';
 		//cout << "Error: queue is empty!" << endl;
 	}
+
+	mWritelock.unlock();	//end critical section of code
 
 	return;
 }
@@ -107,7 +117,6 @@ BattleServer::BattleServer(void)
 	this->root = NULL;
 	this->numClients = 0;
 	this->run = false;
-	this->writelock = false;
 	this->idCounter = 0;
 
 	return;
@@ -244,6 +253,8 @@ void BattleServer::AddClient(SOCKET newSocket)
 {
 	SocketNode* walker = NULL;
 
+	mWritelock.lock();	//begin critical section of code
+
 	if (this->root != NULL)
 	{
 		walker = this->root;
@@ -267,8 +278,9 @@ void BattleServer::AddClient(SOCKET newSocket)
 	thread temp(&BattleServer::Receiver, this, walker->mSocket, idCounter);	//start a thread for listening to the sockets
 	walker->mThread.swap(temp);	//attaches thread handle to the node
 	walker->mId = this->idCounter;
-	walker->active = true;
 	++(this->idCounter);
+
+	mWritelock.unlock();	//end critical section of code
 
 	return;
 }
@@ -310,6 +322,8 @@ void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, i
 
 	cout << "trying to exit...waiting for all clients to disconnect..." << endl;
 
+	mWritelock.lock();	//begin critical section of code
+
 	SocketNode* walker = root;
 
 	while (walker != NULL)
@@ -328,6 +342,10 @@ void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, i
 		walker->mThread.join(); //ensures all the communication threads have been killed
 		walker = walker->next;
 	}
+
+	mWritelock.unlock();	//end critical section of code
+
+	return;
 }
 
 void BattleServer::Receiver(SOCKET mSocket, int Id)
@@ -365,7 +383,7 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 	close(mSocket);
 #endif
 
-	Inactivate(Id); 
+	RemoveSocketNode(Id);
 	--numClients;
 	cout << numClients << " clients connected" << endl;
 
@@ -386,8 +404,7 @@ void BattleServer::Sender(void)
 		{
 			while(walker != NULL)	//goes through the queue, sends the message to everyone.
 			{
-				if (walker->active)
-					send(walker->mSocket, message, BUFSIZE, 0);
+				send(walker->mSocket, message, BUFSIZE, 0);
 				walker = walker->next;
 			}
 		}
@@ -398,22 +415,51 @@ void BattleServer::Sender(void)
 }
 
 
-void BattleServer::Inactivate(int Id)
+void BattleServer::RemoveSocketNode(int Id)
 {
 	SocketNode* walker;
+	bool foundnode = false;
+
+	mWritelock.lock();	//begin critical section of code
+
 	walker = this->root;
 
-	while (walker != NULL)
+	if (walker == NULL)	//should not happen, but good to check
 	{
-		if (walker->mId == Id)
+		cerr << "Error: cannot remove ClientNode, root is null" << endl;
+	}
+	else if (walker->mId == Id) //special case where root node is the node to remove
+	{
+		foundnode = true;
+		root = walker->next;
+		delete walker;
+	}
+	else
+	{
+		while(walker->next != NULL)
 		{
-			walker->active = false;
-			break;
+			if (walker->next->mId == Id)
+			{
+				foundnode = true;
+				SocketNode* tempnode = walker->next;
+				walker->next = walker->next->next;
+				delete tempnode;
+				break;
+			}
+			else
+			{
+				walker = walker->next;
+			}
 		}
-		else
-			walker = walker->next;
 	}
 
+	if (!foundnode) //this will be the case if we don't find the node
+	{
+		cerr << "Error: Did not delete SocketNode, could not find node " << Id << endl;
+	}
+
+
+	mWritelock.unlock();	//end critical section of code
 
 	return;
 }

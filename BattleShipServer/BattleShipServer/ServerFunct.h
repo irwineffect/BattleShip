@@ -44,6 +44,7 @@
 //Using Statements
 using std::cin;
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::thread;
 using std::this_thread::sleep_for;
@@ -74,7 +75,8 @@ public:
 
 private:
 	void deconstructor(Msg* node);	//destructor helper function
-	Msg* root;
+	Msg* root;	//root node pointer
+	mutex mWritelock;	//mutex used to lock critical sections of code
 
 };
 
@@ -85,7 +87,6 @@ typedef struct socketnode	//node for the client list
 	SOCKET mSocket;
 	thread mThread;
 	int mId;
-	bool active;
 	struct socketnode* next;
 
 } SocketNode;
@@ -108,7 +109,7 @@ private:
 	void AddClient(SOCKET newSocket);
 	void Receiver(SOCKET mSocket, int Id);
 	void Sender(void);
-	void Inactivate(int Id);
+	void RemoveSocketNode(int Id);
 
 
 	//Private Members
@@ -117,7 +118,7 @@ private:
 	int numClients;
 	int idCounter;
 	bool run;
-	bool writelock;
+	mutex mWritelock;
 
 };
 
