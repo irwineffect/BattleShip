@@ -417,7 +417,7 @@ void BattleServer::Sender(void)
 
 void BattleServer::RemoveSocketNode(int Id)
 {
-	SocketNode* walker;
+	SocketNode* walker = NULL;
 	bool foundnode = false;
 
 	mWritelock.lock();	//begin critical section of code
@@ -432,6 +432,7 @@ void BattleServer::RemoveSocketNode(int Id)
 	{
 		foundnode = true;
 		root = walker->next;
+		walker->mThread.detach();
 		delete walker;
 	}
 	else
@@ -443,6 +444,7 @@ void BattleServer::RemoveSocketNode(int Id)
 				foundnode = true;
 				SocketNode* tempnode = walker->next;
 				walker->next = walker->next->next;
+				tempnode->mThread.detach();
 				delete tempnode;
 				break;
 			}
