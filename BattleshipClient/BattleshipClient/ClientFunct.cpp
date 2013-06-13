@@ -83,7 +83,6 @@ void CommClient::Start()
 			buffer[BUFSIZE-1] = '\0'; //prevent sending too much data
 			
 			connected =	send(mSocket, buffer, BUFSIZE, 0);	//send the data to the server
-			cout << "Sent: " << endl << buffer << endl;
 
 			buffer[0] = '\0';
 		}
@@ -119,7 +118,7 @@ void CommClient::Receiver(SOCKET mSocket)
 
 		if (buffer[0] != NULL)
 		{
-			cout << "received: " << endl << buffer << endl << endl;
+			cout << endl << "received: " << endl << buffer << endl << endl;
 			
 		}
 

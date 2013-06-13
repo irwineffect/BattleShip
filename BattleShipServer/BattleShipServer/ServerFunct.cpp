@@ -314,7 +314,7 @@ void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, i
 		if (tempSocket != INVALID_SOCKET)	//accept() will return an invalid socket if there is no pending connections
 		{
 			AddClient(tempSocket);
-			cout << "client added!" << endl << numClients << " clients connected" << endl << endl;
+			cout << endl << "client added!" << endl << numClients << " clients connected" << endl;
 		}
 
 		sleep_for(milliseconds(IDLE_PERIOD));
@@ -365,7 +365,7 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 
 		if (buffer[0] != NULL)
 		{
-			cout << "received: " << endl << buffer << endl;
+			cout << endl << "received: " << endl << buffer << endl;
 			//strcat(buffer, identifier);
 			this->mBuffer.queue(buffer);
 			//send(mSocket, buffer, BUFSIZE, 0);	//send the data back that was recieved
@@ -377,7 +377,7 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 
 	if (this->run) //server is still running, so remove node from the list
 	{
-		cout << "client disconnected" << endl << endl;
+		cout << endl << "client disconnected" << endl;
 
 #ifdef WINDOWS
 		closesocket(mSocket);	//close the socket
