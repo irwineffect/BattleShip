@@ -375,17 +375,20 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 		buffer[0] = '\0';
 	}	
 
-	cout << "client disconnected" << endl << endl;
+	if (this->run) //server is still running, so remove node from the list
+	{
+		cout << "client disconnected" << endl << endl;
 
 #ifdef WINDOWS
-	closesocket(mSocket);	//close the socket
+		closesocket(mSocket);	//close the socket
 #elif defined (LINUX)
-	close(mSocket);
+		close(mSocket);
 #endif
 
-	RemoveSocketNode(Id);
-	--numClients;
-	cout << numClients << " clients connected" << endl;
+		RemoveSocketNode(Id);
+		--numClients;
+		cout << numClients << " clients connected" << endl;
+	}//else: server is shutting down, so it will destroy the list by itself
 
 	return;
 }
