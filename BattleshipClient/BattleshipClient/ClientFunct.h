@@ -5,6 +5,8 @@
 #include <iostream>
 #include <winsock.h>
 #include <thread>
+#include <string>
+#include <fstream>
 
 
 //Using Statements
@@ -12,6 +14,10 @@ using std::cin;
 using std::cout;
 using std::endl;
 using std::thread;
+using std::string;
+using std::fstream;
+using std::ofstream;
+using std::ifstream;
 //using namespace std;
 
 #define SCK_VERSION2 0x0202
@@ -27,6 +33,7 @@ public:
 
 private:
 	void Receiver(SOCKET mSocket);
+	void LoadConfig(string filename = "network_config.cfg");
 
 //class members
 	bool run;

@@ -16,8 +16,52 @@
 CommClient::CommClient(int mPort, char mHostname[128])
 {
 	WSADATA wsadata; //variable used for initializing the socket software stuff
-	
+	ifstream cfgfile_in;
+	string hostname;
+	short int port;
+	string filename = "network_config.cfg";
+
 	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
+
+	/*ifstream myfile;
+  myfile.open ("example.txt");
+  if (myfile.is_open())
+  {
+	getline(myfile, filename);
+	cout << filename << endl;
+  
+  myfile.close();
+  }*/
+
+	cfgfile_in.open("network_config.cfg");
+
+	if (cfgfile_in.is_open())
+	{
+		string inbuffer;
+		getline(cfgfile_in, hostname);
+		getline(cfgfile_in, inbuffer);
+		port = atoi(inbuffer.c_str());
+
+		cout << "Config File loaded successfully!" << endl;
+
+		cfgfile_in.close();
+	}
+	else
+	{
+		ofstream cfgfile_out;
+		cout << "Could not open configuration file, please input values manually" << endl << endl;
+		cout << "Input hostname> ";
+		cin >> hostname;
+		cout << "Input port> ";
+		cin >> port;
+
+		cfgfile_out.open("network_config.cfg");
+		cfgfile_out << hostname << endl;
+		cfgfile_out << port << endl;
+		cfgfile_out.close();
+	}
+
+
 
 	if(mHostname[0] == '\0') //if the null hostname is specified
 	{
@@ -132,6 +176,22 @@ void CommClient::Receiver(SOCKET mSocket)
 	return;
 }
 
+void LoadConfig(string filename)
+{
+	fstream cfgfile;
+
+	cfgfile.open(filename);
+
+	if (cfgfile.is_open())
+	{
+	}
+	else
+	{
+		cout << "Could not open configuration file, please input values manually" << endl;
+
+	}
+
+}
 
 
 
