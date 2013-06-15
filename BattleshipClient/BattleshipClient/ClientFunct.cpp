@@ -44,7 +44,7 @@ CommClient::CommClient(string filename)
 
 
 
-	if(mHostname[0] == '\0') //if the null hostname is specified
+	if(mHostname[0] == '0') //if the null hostname is specified
 	{
 		this->socket_info.sin_addr.s_addr = inet_addr("127.0.0.1"); //use the loopback address
 
