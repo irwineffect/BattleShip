@@ -4,7 +4,7 @@
 int main (void)
 {
 
-	CommClient mClient(3410, "");
+	CommClient mClient("network_config.cfg");
 	mClient.Start();
 
 	return 0;

@@ -26,19 +26,21 @@ using std::ifstream;
 class CommClient
 {
 public:
-	CommClient(int mPort = 3410, char mHostname[128] = "");
+	CommClient(string filename = "network_config.cfg");
 	~CommClient();
 	void Start();
 
 
 private:
 	void Receiver(SOCKET mSocket);
-	void LoadConfig(string filename = "network_config.cfg");
+	bool ParseFile(ifstream &cfgfile);
 
 //class members
 	bool run;
 	SOCKADDR_IN socket_info;
 	SOCKET mSocket;
+	string mHostname;
+	int mPort;
 
 };
 

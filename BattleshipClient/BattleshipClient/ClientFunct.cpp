@@ -13,37 +13,18 @@
 *
 *
 ***************************************************************************************************************/
-CommClient::CommClient(int mPort, char mHostname[128])
+CommClient::CommClient(string filename)
 {
 	WSADATA wsadata; //variable used for initializing the socket software stuff
 	ifstream cfgfile_in;
-	string hostname;
-	short int port;
-	string filename = "network_config.cfg";
-
+	 
 	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
 
-	/*ifstream myfile;
-  myfile.open ("example.txt");
-  if (myfile.is_open())
-  {
-	getline(myfile, filename);
-	cout << filename << endl;
-  
-  myfile.close();
-  }*/
+	cfgfile_in.open(filename);
 
-	cfgfile_in.open("network_config.cfg");
-
-	if (cfgfile_in.is_open())
+	if (cfgfile_in.is_open() && ParseFile(cfgfile_in) )
 	{
-		string inbuffer;
-		getline(cfgfile_in, hostname);
-		getline(cfgfile_in, inbuffer);
-		port = atoi(inbuffer.c_str());
-
 		cout << "Config File loaded successfully!" << endl;
-
 		cfgfile_in.close();
 	}
 	else
@@ -51,13 +32,13 @@ CommClient::CommClient(int mPort, char mHostname[128])
 		ofstream cfgfile_out;
 		cout << "Could not open configuration file, please input values manually" << endl << endl;
 		cout << "Input hostname> ";
-		cin >> hostname;
+		cin >> mHostname;
 		cout << "Input port> ";
-		cin >> port;
+		cin >> mPort;
 
-		cfgfile_out.open("network_config.cfg");
-		cfgfile_out << hostname << endl;
-		cfgfile_out << port << endl;
+		cfgfile_out.open(filename);
+		cfgfile_out << "hostname:" << mHostname << endl;
+		cfgfile_out << "port:" << mPort << endl;
 		cfgfile_out.close();
 	}
 
@@ -71,7 +52,7 @@ CommClient::CommClient(int mPort, char mHostname[128])
 	else //a hostname is given
 	{
 		struct hostent *remoteHost = NULL;
-		remoteHost = gethostbyname(mHostname); //attempt DNS lookup
+		remoteHost = gethostbyname(mHostname.c_str()); //attempt DNS lookup
 
 		if( remoteHost == NULL)
 		{
@@ -176,25 +157,47 @@ void CommClient::Receiver(SOCKET mSocket)
 	return;
 }
 
-void LoadConfig(string filename)
+bool CommClient::ParseFile(ifstream &cfgfile)
 {
-	fstream cfgfile;
+	string buffer;
+	string parameter;
+	string value;
+	int position;
 
-	cfgfile.open(filename);
+	//initialize values
+	mHostname = "";
+	mPort = 0;
 
-	if (cfgfile.is_open())
+	while ( cfgfile.good() )
 	{
+		getline(cfgfile, buffer);
+		position = buffer.find(':');
+		parameter = buffer.substr( 0, position );
+		value = buffer.substr( position+1, buffer.length() );
+
+		if (parameter == "hostname")
+		{
+			mHostname = value;
+		}
+		else if (parameter == "port")
+		{
+			mPort = atoi( value.c_str() );
+		}
 	}
+
+	if (mHostname == "" || mPort == 0)
+		return false;
 	else
-	{
-		cout << "Could not open configuration file, please input values manually" << endl;
+		return true;
 
-	}
+
+
+	/*getline(cfgfile, mHostname);
+	getline(cfgfile, inbuffer);
+	mPort = atoi(inbuffer.c_str());*/
+
 
 }
-
-
-
 
 /***************************************************************************************************************
 ****************************************************************************************************************
