@@ -17,7 +17,7 @@ CommClient::CommClient(string filename)
 {
 	WSADATA wsadata; //variable used for initializing the socket software stuff
 	ifstream cfgfile_in;
-	 
+
 	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
 
 	cfgfile_in.open(filename);
@@ -71,11 +71,13 @@ CommClient::CommClient(string filename)
 	this->socket_info.sin_family = AF_INET;	//use ipv4
 	this->socket_info.sin_port = htons(mPort);	//use selected port
 }
-CommClient::~CommClient()
+CommClient::~CommClient(void)
 {
+
+	WSACleanup();	//not sure exactly what this does, but we're always supposed to call this at the end (I think it closes sockets, etc) 
 }
 
-void CommClient::Start()
+bool CommClient::Start(void)
 {
 	int connect_status;
 
@@ -90,42 +92,66 @@ void CommClient::Start()
 	//attempt to connect to the server
 	//this will fail if no server is listening
 	connect_status = connect(this->mSocket, (SOCKADDR*) &socket_info, sizeof(socket_info));	
+
 	if (connect_status == SOCKET_ERROR)
+	{
 		cout << "Socket connection failed" << endl;
+		return false;
+	}
 	else
 	{
 		cout << "Socket connection successful" << endl;
 		thread temp(&CommClient::Receiver, this, mSocket);
-		int connected = 1;
-		cout << endl << endl;
-
-		char buffer[BUFSIZE] = "";	//data buffer
-		while (connected != -1)
-		{
-			cin.getline(buffer, BUFSIZE, '\n');	//read data from the user
-			//fflush(stdin);
-			//cin.clear();
-			buffer[BUFSIZE-1] = '\0'; //prevent sending too much data
-			
-			connected =	send(mSocket, buffer, BUFSIZE, 0);	//send the data to the server
-
-			buffer[0] = '\0';
-		}
-		temp.join();
-
+		mReciever_thread.swap(temp);
+		return true;
 	}
 
-	cout << endl;
-//	system("pause");
-
-	cout << "Disconnected" << endl;
-
-
+}
+void CommClient::End(void)
+{
+	if (mReciever_thread.joinable())
+	{
+		mReciever_thread.join();
+	}
 
 	closesocket(mSocket);	//close the socket
-	WSACleanup();	//not sure exactly what this does, but we're always supposed to call this at the end (I think it closes sockets, etc) 
+
+}
+
+bool CommClient::SendMsg(string message)
+{
+	int sent_count     = 0,
+		message_length = 0;
+	char cstr_message[BUFSIZE] = "";
 
 
+
+	message_length = message.length();
+
+
+	if (message_length >= BUFSIZE)	//if the message is too large
+	{
+		return false;	//fail the command
+	}
+
+	for (int i=0; i < message_length; ++i) //copy the message into a c-style string
+	{
+		cstr_message[i] = message[i];
+	}
+
+	cstr_message[message_length] = '\0'; //ensure the c-style string is null-terminated
+
+
+	sent_count = send(mSocket, cstr_message, message_length, 0);	//send the message to the server
+
+	if (sent_count != message_length)	//we did not send the whole message
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
 
 void CommClient::Receiver(SOCKET mSocket)
@@ -144,7 +170,6 @@ void CommClient::Receiver(SOCKET mSocket)
 		if (buffer[0] != NULL)
 		{
 			cout << endl << "received: " << endl << buffer << endl << endl;
-			
 		}
 
 		buffer[0] = '\0';
@@ -229,7 +254,7 @@ GameBoard::GameBoard(int size)
 	for (i=0; i<size; ++i)
 		for(j=0; j<size; ++j)
 			mArray[i][j] = '-';
-	
+
 	return;
 }
 

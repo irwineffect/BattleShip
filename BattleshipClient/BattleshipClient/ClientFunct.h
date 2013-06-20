@@ -27,8 +27,11 @@ class CommClient
 {
 public:
 	CommClient(string filename = "network_config.cfg");
-	~CommClient();
-	void Start();
+	~CommClient(void);
+	bool Start(void);
+	void End(void);
+	bool SendMsg(string message);
+
 
 
 private:
@@ -41,6 +44,7 @@ private:
 	SOCKET mSocket;
 	string mHostname;
 	int mPort;
+	thread mReciever_thread;
 
 };
 

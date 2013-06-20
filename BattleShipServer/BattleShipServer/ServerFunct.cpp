@@ -359,6 +359,11 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 
 	while( connected != -1 )
 	{
+
+		for (int i=0; i < BUFSIZE; ++i)	//clear the buffer
+		{
+			buffer[i] = '\0';
+		}
 		//recv() is a blocking function, meaning program flow will halt here until
 		//somebody sends something
 		connected = recv(mSocket, buffer, BUFSIZE, 0);	//recv() will return a -1 if the socket is disconnected
@@ -371,8 +376,6 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 			//send(mSocket, buffer, BUFSIZE, 0);	//send the data back that was recieved
 			//cout << "echoed!" << endl << endl;
 		}
-
-		buffer[0] = '\0';
 	}	
 
 	if (this->run) //server is still running, so remove node from the list
@@ -398,6 +401,7 @@ void BattleServer::Sender(void)
 {
 	char message[BUFSIZE] = {'\0'};
 	SocketNode* walker;
+	int message_size = 0;
 
 	while(run)
 	{
