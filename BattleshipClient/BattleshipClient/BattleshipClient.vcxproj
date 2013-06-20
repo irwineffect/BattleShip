@@ -85,6 +85,9 @@
   <ItemGroup>
     <ClInclude Include="ClientFunct.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="network_config.cfg" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

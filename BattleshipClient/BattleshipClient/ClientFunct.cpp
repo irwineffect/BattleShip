@@ -13,13 +13,38 @@
 *
 *
 ***************************************************************************************************************/
-CommClient::CommClient(int mPort, char mHostname[128])
+CommClient::CommClient(string filename)
 {
 	WSADATA wsadata; //variable used for initializing the socket software stuff
-	
+	ifstream cfgfile_in;
+	 
 	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
 
-	if(mHostname[0] == '\0') //if the null hostname is specified
+	cfgfile_in.open(filename);
+
+	if (cfgfile_in.is_open() && ParseFile(cfgfile_in) )
+	{
+		cout << "Config File loaded successfully!" << endl;
+		cfgfile_in.close();
+	}
+	else
+	{
+		ofstream cfgfile_out;
+		cout << "Could not open configuration file, please input values manually" << endl << endl;
+		cout << "Input hostname> ";
+		cin >> mHostname;
+		cout << "Input port> ";
+		cin >> mPort;
+
+		cfgfile_out.open(filename);
+		cfgfile_out << "hostname:" << mHostname << endl;
+		cfgfile_out << "port:" << mPort << endl;
+		cfgfile_out.close();
+	}
+
+
+
+	if(mHostname[0] == '0') //if the null hostname is specified
 	{
 		this->socket_info.sin_addr.s_addr = inet_addr("127.0.0.1"); //use the loopback address
 
@@ -27,7 +52,7 @@ CommClient::CommClient(int mPort, char mHostname[128])
 	else //a hostname is given
 	{
 		struct hostent *remoteHost = NULL;
-		remoteHost = gethostbyname(mHostname); //attempt DNS lookup
+		remoteHost = gethostbyname(mHostname.c_str()); //attempt DNS lookup
 
 		if( remoteHost == NULL)
 		{
@@ -131,9 +156,47 @@ void CommClient::Receiver(SOCKET mSocket)
 	return;
 }
 
+bool CommClient::ParseFile(ifstream &cfgfile)
+{
+	string buffer;
+	string parameter;
+	string value;
+	int position;
+
+	//initialize values
+	mHostname = "";
+	mPort = 0;
+
+	while ( cfgfile.good() )
+	{
+		getline(cfgfile, buffer);
+		position = buffer.find(':');
+		parameter = buffer.substr( 0, position );
+		value = buffer.substr( position+1, buffer.length() );
+
+		if (parameter == "hostname")
+		{
+			mHostname = value;
+		}
+		else if (parameter == "port")
+		{
+			mPort = atoi( value.c_str() );
+		}
+	}
+
+	if (mHostname == "" || mPort == 0)
+		return false;
+	else
+		return true;
 
 
 
+	/*getline(cfgfile, mHostname);
+	getline(cfgfile, inbuffer);
+	mPort = atoi(inbuffer.c_str());*/
+
+
+}
 
 /***************************************************************************************************************
 ****************************************************************************************************************
