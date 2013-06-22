@@ -181,6 +181,7 @@ void CommClient::Receiver(SOCKET mSocket)
 	return;
 }
 
+
 bool CommClient::ParseFile(ifstream &cfgfile)
 {
 	string buffer;
@@ -214,13 +215,31 @@ bool CommClient::ParseFile(ifstream &cfgfile)
 	else
 		return true;
 
+}
+
+/***************************************************************************************************************
+****************************************************************************************************************
+*	Point Class
+*
+*
+*
+*
+*
+*
+*
+*
+*
+***************************************************************************************************************/
+Point::Point()
+{
 
 
-	/*getline(cfgfile, mHostname);
-	getline(cfgfile, inbuffer);
-	mPort = atoi(inbuffer.c_str());*/
+	return;
+}
 
 
+Point::~Point()
+{
 }
 
 /***************************************************************************************************************
@@ -253,8 +272,8 @@ GameBoard::GameBoard(int size)
 
 	for (i=0; i<size; ++i)
 		for(j=0; j<size; ++j)
-			mArray[i][j] = '-';
-
+			mArray[i][j] = WATER_CHAR;
+	
 	return;
 }
 
@@ -290,3 +309,76 @@ void GameBoard::Display(void)
 
 	return;
 }
+
+
+void GameBoard::Place(int xstart, int xend, int ystart, int yend, char type)
+{
+	int i,j;
+
+	if (xstart >= mArraysize || xend >= mArraysize || ystart >= mArraysize || yend >= mArraysize || xstart < 0 || xend < 0 || ystart < 0 || yend < 0)
+	{
+		cerr << "Error: attempted to place outside array bounds" << endl;
+		return;
+	}
+
+	for (i=xstart; i<=xend; ++i)
+		for (j=ystart; j<=yend; ++j)
+			mArray[j][i] = type;
+
+	return;
+}
+
+
+bool GameBoard::Shoot(int x, int y)
+{
+	if (x >= mArraysize || y >= mArraysize || x < 0 || y < 0)
+	{
+		cerr << "Error: attempted to shoot outside array bounds" << endl;
+		return false;
+	}
+
+	if (mArray[y][x] == WATER_CHAR)
+	{
+		mArray[y][x] = MISS_CHAR;
+		return false;
+	}
+	else
+	{
+		mArray[y][x] = HIT_CHAR;
+		return true;
+	}
+
+	return true;
+}
+
+
+
+/***************************************************************************************************************
+****************************************************************************************************************
+*	Ship Class
+*
+*
+*
+*
+*
+*
+*
+*
+*
+***************************************************************************************************************/
+Ship::Ship(short int size)
+{
+	mSize = size;
+	mLocations = new Coordinate[size];
+
+	return;
+}
+
+
+Ship::~Ship()
+{
+	delete[] mLocations;
+	
+	return;
+}
+

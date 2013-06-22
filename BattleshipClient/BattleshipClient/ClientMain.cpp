@@ -18,9 +18,7 @@ int main (void)
 		connected = mClient.SendMsg(message);
 	}
 
-
-
-
 	mClient.End();
+
 	return 0;
 }
