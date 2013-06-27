@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BattleshipClient", "..\Batt
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BattleShipServer", "..\BattleShipServer\BattleShipServer\BattleShipServer.vcxproj", "{F75EA1F4-ECFF-4D27-BE1A-D9E464B09BE7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Network_lib", "..\Network_lib\Network_lib.vcxproj", "{8F216614-8FFD-4573-9BB8-79265DC6137C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{F75EA1F4-ECFF-4D27-BE1A-D9E464B09BE7}.Debug|Win32.Build.0 = Debug|Win32
 		{F75EA1F4-ECFF-4D27-BE1A-D9E464B09BE7}.Release|Win32.ActiveCfg = Release|Win32
 		{F75EA1F4-ECFF-4D27-BE1A-D9E464B09BE7}.Release|Win32.Build.0 = Release|Win32
+		{8F216614-8FFD-4573-9BB8-79265DC6137C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8F216614-8FFD-4573-9BB8-79265DC6137C}.Debug|Win32.Build.0 = Debug|Win32
+		{8F216614-8FFD-4573-9BB8-79265DC6137C}.Release|Win32.ActiveCfg = Release|Win32
+		{8F216614-8FFD-4573-9BB8-79265DC6137C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

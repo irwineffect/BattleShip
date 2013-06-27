@@ -1,6 +1,5 @@
-#ifndef SERVERFUNCT_H
-#define SERVERFUNCT_H
-
+#ifndef NETFUNCT_H
+#define NETFUNCT_H
 
 //uncomment proper operating system
 #define WINDOWS
@@ -15,6 +14,7 @@
 #include <thread>
 #include <string>
 #include <mutex>
+#include <fstream>
 
 #ifdef WINDOWS
 	#include <winsock.h>
@@ -51,6 +51,9 @@ using std::this_thread::sleep_for;
 using std::chrono::milliseconds;
 using std::string;
 using std::mutex;
+using std::fstream;
+using std::ofstream;
+using std::ifstream;
 //using namespace std;
 
 
@@ -121,5 +124,36 @@ private:
 	mutex mWritelock;
 
 };
+
+#ifndef LINUX
+class CommClient
+{
+public:
+	CommClient(string filename = "network_config.cfg");
+	~CommClient(void);
+	bool Start(void);
+	void End(void);
+	bool SendMsg(string message);
+
+
+
+private:
+	void Receiver(SOCKET mSocket);
+	bool ParseFile(ifstream &cfgfile);
+
+//class members
+	bool run;
+	SOCKADDR_IN socket_info;
+	SOCKET mSocket;
+	string mHostname;
+	int mPort;
+	thread mReciever_thread;
+
+};
+#endif
+
+
+
+
 
 #endif

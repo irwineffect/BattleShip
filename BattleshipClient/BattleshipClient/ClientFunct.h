@@ -29,32 +29,6 @@ using std::ifstream;
 #define MISS_CHAR  'x'
 #define HIT_CHAR   'O'
 
-class CommClient
-{
-public:
-	CommClient(string filename = "network_config.cfg");
-	~CommClient(void);
-	bool Start(void);
-	void End(void);
-	bool SendMsg(string message);
-
-
-
-private:
-	void Receiver(SOCKET mSocket);
-	bool ParseFile(ifstream &cfgfile);
-
-//class members
-	bool run;
-	SOCKADDR_IN socket_info;
-	SOCKET mSocket;
-	string mHostname;
-	int mPort;
-	thread mReciever_thread;
-
-};
-
-
 class Point
 {
 public:
