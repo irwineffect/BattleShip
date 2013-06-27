@@ -21,9 +21,6 @@ using std::ofstream;
 using std::ifstream;
 //using namespace std;
 
-#define SCK_VERSION2 0x0202
-#define BUFSIZE 128
-
 //Formatting
 #define WATER_CHAR '-'
 #define MISS_CHAR  'x'

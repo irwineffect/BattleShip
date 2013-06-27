@@ -5,6 +5,10 @@
 #define WINDOWS
 //#define LINUX
 
+#ifdef LINUX
+#define SERVER_ONLY	//client is not ready for building in linux
+#endif
+
 
 #define _CRT_SECURE_NO_WARNINGS	//hides security warnings
 
@@ -125,7 +129,7 @@ private:
 
 };
 
-#ifndef LINUX
+#ifndef SERVER_ONLY
 class CommClient
 {
 public:
