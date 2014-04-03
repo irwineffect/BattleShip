@@ -100,7 +100,7 @@ void MsgBuffer::dequeue(char output[BUFSIZE])
 
 /***************************************************************************************************************
 ****************************************************************************************************************
-*	BattleServer Class
+*	CommServer Class
 *
 *
 *
@@ -111,7 +111,7 @@ void MsgBuffer::dequeue(char output[BUFSIZE])
 *
 *
 ***************************************************************************************************************/
-BattleServer::BattleServer(void)
+CommServer::CommServer(void)
 {
 	this->root = NULL;
 	this->numClients = 0;
@@ -121,12 +121,12 @@ BattleServer::BattleServer(void)
 	return;
 }
 
-BattleServer::~BattleServer(void)
+CommServer::~CommServer(void)
 {
 	Deconstructor(this->root);
 }
 
-void BattleServer::Deconstructor(SocketNode* node)
+void CommServer::Deconstructor(SocketNode* node)
 {
 	if (node != NULL)
 	{
@@ -137,7 +137,7 @@ void BattleServer::Deconstructor(SocketNode* node)
 
 
 
-void BattleServer::Start(void)
+void CommServer::Start(void)
 {
 	int mPort = PORT; //listening port
 	char mIpAddr[16] = "127.0.0.1"; //self IP iddress
@@ -161,9 +161,9 @@ void BattleServer::Start(void)
 	if (StartListening(mPort, mIpAddr, mListenSocket))	//startListening() returns successful if all initialization things went well
 	{	
 		run = true;
-		thread exiterThread(&BattleServer::ExitPrompt, this);	//this thread waits for the "exit" command to be entered on the terminal. 
-		thread accepterThread(&BattleServer::Accepter, this, mListenSocket, listen_socket_info, socket_size); //this thread accepts new clients (which then starts a talking thread for the new client)
-		thread senderThread(&BattleServer::Sender, this);	//this thread processes the message queue and sends it to everyone
+		thread exiterThread(&CommServer::ExitPrompt, this);	//this thread waits for the "exit" command to be entered on the terminal. 
+		thread accepterThread(&CommServer::Accepter, this, mListenSocket, listen_socket_info, socket_size); //this thread accepts new clients (which then starts a talking thread for the new client)
+		thread senderThread(&CommServer::Sender, this);	//this thread processes the message queue and sends it to everyone
 
 		exiterThread.join(); //wait for the exit command to be entered on the terminal
 		accepterThread.join(); //wait for all connections and other threads to end
@@ -184,7 +184,7 @@ void BattleServer::Start(void)
 #endif
 }
 
-bool BattleServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener)
+bool CommServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener)
 {
 
 #ifdef WINDOWS
@@ -231,7 +231,7 @@ bool BattleServer::StartListening(int PortNo, char* IPaddr, SOCKET &listener)
 }
 
 
-void BattleServer::ExitPrompt(void)
+void CommServer::ExitPrompt(void)
 {
 	string buffer;
 	do
@@ -248,7 +248,7 @@ void BattleServer::ExitPrompt(void)
 	return;
 }
 
-void BattleServer::AddClient(SOCKET newSocket)
+void CommServer::AddClient(SOCKET newSocket)
 {
 	SocketNode* walker = NULL;
 
@@ -274,7 +274,7 @@ void BattleServer::AddClient(SOCKET newSocket)
 	//add new socket and thread and stuff
 
 	walker->mSocket = newSocket;
-	thread temp(&BattleServer::Receiver, this, walker->mSocket, idCounter);	//start a thread for listening to the sockets
+	thread temp(&CommServer::Receiver, this, walker->mSocket, idCounter);	//start a thread for listening to the sockets
 	walker->mThread.swap(temp);	//attaches thread handle to the node
 	walker->mId = this->idCounter;
 	++(this->idCounter);
@@ -284,7 +284,7 @@ void BattleServer::AddClient(SOCKET newSocket)
 	return;
 }
 
-void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, int socket_size)
+void CommServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, int socket_size)
 {
 	SOCKET tempSocket;
 
@@ -348,7 +348,7 @@ void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, i
 	return;
 }
 
-void BattleServer::Receiver(SOCKET mSocket, int Id)
+void CommServer::Receiver(SOCKET mSocket, int Id)
 {
 	char buffer[BUFSIZE] = "";	//data buffer
 	int connected = 1;	
@@ -396,7 +396,7 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 }
 
 
-void BattleServer::Sender(void)
+void CommServer::Sender(void)
 {
 	char message[BUFSIZE] = {'\0'};
 	SocketNode* walker;
@@ -421,7 +421,7 @@ void BattleServer::Sender(void)
 }
 
 
-void BattleServer::RemoveSocketNode(int Id)
+void CommServer::RemoveSocketNode(int Id)
 {
 	SocketNode* walker = NULL;
 	bool foundnode = false;

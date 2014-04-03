@@ -3,7 +3,7 @@
 
 int main (void)
 {
-	BattleServer mServer;
+	CommServer mServer;
 
 	mServer.Start();
 }

@@ -90,7 +90,7 @@ private:
 
 };
 
-//BattleServer Class
+//CommServer Class
 
 typedef struct socketnode	//node for the client list
 {
@@ -101,12 +101,12 @@ typedef struct socketnode	//node for the client list
 
 } SocketNode;
 
-class BattleServer	//the class
+class CommServer	//the class
 {
 public:
 		//Public Methods	
-		BattleServer(void);	//constructor
-		~BattleServer(void); //destructor
+		CommServer(void);	//constructor
+		~CommServer(void); //destructor
 		void Start(void);
 	
 
