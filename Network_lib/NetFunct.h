@@ -1,9 +1,12 @@
 #ifndef NETFUNCT_H
 #define NETFUNCT_H
 
-//uncomment proper operating system
-#define WINDOWS
-//#define LINUX
+//Check that the operating system was specified
+#if defined (WINDOWS) && defined (LINUX)
+#error "Multiple operating systems are selected"
+#elif !(defined (WINDOWS) || defined (LINUX))
+#error No operating system was selected. Set compile flag for "WINDOWS" or "LINUX"
+#endif
 
 #ifdef LINUX
 #define SERVER_ONLY	//client is not ready for building in linux
