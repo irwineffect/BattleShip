@@ -313,6 +313,7 @@ void BattleServer::Accepter(SOCKET mListenSocket, sockaddr listen_socket_info, i
 		if (tempSocket != INVALID_SOCKET)	//accept() will return an invalid socket if there is no pending connections
 		{
 			AddClient(tempSocket);
+			++numClients;
 			cout << endl << "client added!" << endl << numClients << " clients connected" << endl;
 		}
 
@@ -351,7 +352,6 @@ void BattleServer::Receiver(SOCKET mSocket, int Id)
 {
 	char buffer[BUFSIZE] = "";	//data buffer
 	int connected = 1;	
-	++numClients;
 
 	char identifier[32] = "";
 	sprintf(identifier, " -from client %d", Id);
