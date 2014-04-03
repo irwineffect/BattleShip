@@ -50,8 +50,6 @@ build/
 [Bb]in/
 [Oo]bj/
 
-!BattleShip/Release
-
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
