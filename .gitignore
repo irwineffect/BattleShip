@@ -214,16 +214,10 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/Client-Config-File
 #############
 ## Project Specific
 #############
 
-<<<<<<< HEAD
 network_config.cfg
-=======
-network_config.cfg
->>>>>>> origin/Client-Config-File
+*.exe
