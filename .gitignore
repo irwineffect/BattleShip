@@ -218,6 +218,6 @@ pip-log.txt
 #############
 ## Project Specific
 #############
-
+Build/
 network_config.cfg
 *.exe
