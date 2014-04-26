@@ -489,10 +489,15 @@ void CommServer::RemoveSocketNode(int Id)
 ***************************************************************************************************************/
 CommClient::CommClient(string filename)
 {
-	WSADATA wsadata; //variable used for initializing the socket software stuff
 	ifstream cfgfile_in;
 
+#ifdef WINDOWS
+	WSADATA wsadata; //variable used for initializing the socket software stuff
+#endif
+
+#ifdef WINDOWS
 	WSAStartup(SCK_VERSION2, &wsadata);	//initialize socket stuff
+#endif
 
 	cfgfile_in.open(filename);
 
@@ -547,8 +552,9 @@ CommClient::CommClient(string filename)
 }
 CommClient::~CommClient(void)
 {
-
+#if defined (WINDOWS)
 	WSACleanup();	//not sure exactly what this does, but we're always supposed to call this at the end (I think it closes sockets, etc) 
+#endif
 }
 
 bool CommClient::Start(void)
@@ -565,8 +571,11 @@ bool CommClient::Start(void)
 
 	//attempt to connect to the server
 	//this will fail if no server is listening
+#if defined (WINDOWS)
 	connect_status = connect(this->mSocket, (SOCKADDR*) &socket_info, sizeof(socket_info));	
-
+#elif defined (LINUX)
+	connect_status = connect(this->mSocket, (struct sockaddr*) &socket_info, sizeof(socket_info));	
+#endif
 	if (connect_status == SOCKET_ERROR)
 	{
 		cout << "Socket connection failed" << endl;
@@ -588,8 +597,11 @@ void CommClient::End(void)
 		mReciever_thread.join();
 	}
 
+#if defined (WINDOWS)
 	closesocket(mSocket);	//close the socket
-
+#elif defined (LINUX)
+	close(mSocket);
+#endif
 }
 
 bool CommClient::SendMsg(string message)
@@ -650,8 +662,11 @@ void CommClient::Receiver(SOCKET mSocket)
 	}	
 
 	cout << "disconnected" << endl << endl;
+#if defined (WINDOWS)
 	closesocket(mSocket);	//close the socket
-
+#elif defined (LINUX)
+	close(mSocket);	//close the socket
+#endif
 	return;
 }
 

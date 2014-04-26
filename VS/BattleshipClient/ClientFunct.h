@@ -3,7 +3,6 @@
 
 //Libraries
 #include <iostream>
-#include <winsock.h>
 #include <thread>
 #include <string>
 #include <fstream>

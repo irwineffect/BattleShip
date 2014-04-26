@@ -8,12 +8,9 @@
 #error No operating system was selected. Set compile flag for "WINDOWS" or "LINUX"
 #endif
 
-#ifdef LINUX
-#define SERVER_ONLY	//client is not ready for building in linux
-#endif
-
-
+#if defined(WINDOWS)
 #define _CRT_SECURE_NO_WARNINGS	//hides security warnings
+#endif
 
 //Libraries
 #include <iostream>
@@ -132,7 +129,6 @@ private:
 
 };
 
-#ifndef SERVER_ONLY
 class CommClient
 {
 public:
@@ -150,14 +146,18 @@ private:
 
 //class members
 	bool run;
+
+#if defined(WINDOWS)
 	SOCKADDR_IN socket_info;
+#elif defined (LINUX)
+	struct sockaddr_in socket_info;
+#endif
 	SOCKET mSocket;
 	string mHostname;
 	int mPort;
 	thread mReciever_thread;
 
 };
-#endif
 
 
 
