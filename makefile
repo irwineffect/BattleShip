@@ -12,7 +12,7 @@ server: battleship_server.exe
 client: battleship_client.exe
 
 #create the build directory
-Build:
+Build/:
 	mkdir Build/
 
 #build object file for networking library
