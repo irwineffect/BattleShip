@@ -592,10 +592,10 @@ bool CommClient::Start(void)
 }
 void CommClient::End(void)
 {
-	if (mReciever_thread.joinable())
-	{
+	//if (mReciever_thread.joinable())
+	//{
 		mReciever_thread.join();
-	}
+	//}
 
 #if defined (WINDOWS)
 	closesocket(mSocket);	//close the socket

@@ -16,9 +16,18 @@ int main (void)
 		message.clear();
 		cin >> message;
 		connected = mClient.SendMsg(message);
+		
+		if (message == "/exit")
+		{
+			cout << "Exiting!" << endl;
+			connected = false;
+		}
 	}
 
+	cout << "ending...";
 	mClient.End();
+
+	cout << "ended" << endl;
 
 	return 0;
 }
